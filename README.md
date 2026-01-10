@@ -1,4 +1,4 @@
-# lucky_ai
+# lucky_ai - Project for the university course 02476 Machine learning operations
 
 ### Overall goal of the project
 
