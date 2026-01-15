@@ -6,6 +6,7 @@ import pandas as pd
 import torch
 import os
 from datasets import load_dataset
+import typer
 
 RAW_DIR = Path("data/raw")
 PROCESSED_DIR = Path("data/processed")
@@ -39,8 +40,21 @@ class LuckyDataset(Dataset):
         return len(self.questions)
 
     
+app = typer.Typer()
 
-def preprocess(subset: str = "all") -> None:
+@app.command()
+def preprocess(subset: str = "all",) -> None:
+    """
+    Preprocess datasets and store them as parquet files.
+
+    subset options:
+    - all           : run all preprocessors
+    - commonsense   : ETHICS commonsense dataset
+    - justice       : ETHICS justice dataset
+    - strategyqa    : StrategyQA dataset
+    - boolq         : Google BoolQ dataset
+    """
+    
     print("Preprocessing data...")
 
     if subset == "all" or subset == "commonsense":
@@ -126,7 +140,3 @@ def preprocess_justice() -> None:
 
         print(f"Processed {file.name} -> {out_path}")
 
-if __name__ == "__main__":
-    #typer.run(preprocess)
-
-    a = LuckyDataset(train=True)
