@@ -4,7 +4,7 @@ import typer
 from torch.utils.data import Dataset
 import pandas as pd
 import torch
-
+from datasets import load_dataset
 
 RAW_DIR = Path("data/raw")
 PROCESSED_DIR = Path("data/processed")
@@ -34,8 +34,23 @@ def preprocess(subset: str = "all") -> None:
         preprocess_commonsense()
     if  subset == "all" or subset == "justice":
         preprocess_justice()
+    if subset == "all" or subset == "stategyqa":
+        preprocess_strategyQA()
 
+def preprocess_strategyQA() -> None:
+    "Preprocess QA data from the StrategyQA dataset."
+    ds = load_dataset("ChilleD/StrategyQA")
+    # Extract train and test splits
+    for split in ["train", "test"]:
+        df = ds[split].to_pandas()
+        # Keep only 'question' and 'label' columns
+        df = df[["question", "answer"]]
+        df.rename(columns={"question": "input", "answer": "label"}, inplace=True)
 
+        out_path = PROCESSED_DIR / f"strategyqa_{split}.csv"
+        df.to_csv(out_path, index=False)
+        print(f"Saved {out_path}")
+    
 
 def preprocess_commonsense() -> None:
     "Preprocess commonsense data from ETHICS dataset."
@@ -59,6 +74,7 @@ def preprocess_commonsense() -> None:
 
         print(f"Processed {file.name} -> {out_path}")
 
+
 def preprocess_justice() -> None:
     "Preprocess justice data from ETHICS dataset."
     print("Preprocessing justice data...")
@@ -79,6 +95,4 @@ def preprocess_justice() -> None:
         print(f"Processed {file.name} -> {out_path}")
 
 if __name__ == "__main__":
-    #typer.run(preprocess)
-
-    preprocess_strategyQA()
+    typer.run(preprocess)
