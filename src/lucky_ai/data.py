@@ -2,12 +2,17 @@ from pathlib import Path
 
 import typer
 from torch.utils.data import Dataset
+import pandas as pd
+import torch
 
+RAW_DIR = Path("data/raw")
+PROCESSED_DIR = Path("data/processed")
 
-class MyDataset(Dataset):
-    """My custom dataset."""
+class LuckyDataset(Dataset):
+    """Dataset with questions and dilemmas."""
 
     def __init__(self, data_path: Path) -> None:
+        super().__init__()
         self.data_path = data_path
 
     def __len__(self) -> int:
@@ -16,14 +21,39 @@ class MyDataset(Dataset):
     def __getitem__(self, index: int):
         """Return a given sample from the dataset."""
 
-    def preprocess(self, output_folder: Path) -> None:
-        """Preprocess the raw data and save it to the output folder."""
+    def load_data(self) -> None:
+        """Load data from the data path."""
 
+    
 
-def preprocess(data_path: Path, output_folder: Path) -> None:
+def preprocess(subset="all") -> None:
     print("Preprocessing data...")
-    dataset = MyDataset(data_path)
-    dataset.preprocess(output_folder)
+
+    if subset == "all" or "commonsense":
+        preprocess_commonsense()
+
+
+def preprocess_commonsense() -> None:
+    "Preprocess commonsense data from ETHICS dataset."
+    print("Preprocessing commonsense data...")
+
+    commonsense_dir = RAW_DIR / "ethics" / "commonsense"
+
+    train_path = commonsense_dir / "cm_train.csv"
+    test_path = commonsense_dir / "cm_test.csv"
+
+    for file in [train_path, test_path]:
+        df = pd.read_csv(file)
+        df = df[df["is_short"] == True]
+        df = df[["label", "input"]]
+
+        # Invert labels as 0 corresponds to acceptable and 1 to unacceptable in  dataset
+        df['label'] = ~df['label'].astype(bool)
+
+        out_path = PROCESSED_DIR / file.name
+        df.to_csv(out_path, index=False)
+
+        print(f"Processed {file.name} -> {out_path}")
 
 
 if __name__ == "__main__":
