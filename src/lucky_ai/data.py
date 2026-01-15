@@ -34,8 +34,27 @@ def preprocess(subset: str = "all") -> None:
         preprocess_commonsense()
     if  subset == "all" or subset == "justice":
         preprocess_justice()
-    if subset == "all" or subset == "stategyqa":
+    if subset == "all" or subset == "strategyqa":
         preprocess_strategyQA()
+    if subset == "all" or subset == "boolq":
+        preprocess_boolq()
+
+
+def preprocess_boolq() -> None:
+    "Preprocess boolean questions from the BoolQ dataset."
+    ds = load_dataset("google/boolq")
+    ds["test"] = ds.pop("validation")
+
+    # Extract train and validation splits
+    for split in ["train", "test"]:
+        df = ds[split].to_pandas()
+        # Keep only 'question' and 'answer' columns
+        df = df[["question", "answer"]]
+        df.rename(columns={"question": "input", "answer": "label"}, inplace=True)
+
+        out_path = PROCESSED_DIR / f"boolq_{split}.csv"
+        df.to_csv(out_path, index=False)
+        print(f"Saved {out_path}")
 
 def preprocess_strategyQA() -> None:
     "Preprocess QA data from the StrategyQA dataset."
