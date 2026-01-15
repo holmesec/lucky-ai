@@ -19,6 +19,17 @@ The model will be fine-tuned on the following datasets:
 - **ETHICS:** A dataset designed to evaluate moral reasoning, with labels such as "acceptable" and "not acceptable", which can be mapped to "yes" and "no" answers for ethical dilemmas. [Link](https://github.com/hendrycks/ethics)
 - ...
 
+### Contribute
+
+To contribute to this repository, do the following:
+
+```bash
+git clone https://github.com/holmesec/lucky-ai.git
+cd lucky-ai
+uv sync
+uv run pre-commit install
+```
+
 ## Project structure
 
 The directory structure of the project looks like this:
