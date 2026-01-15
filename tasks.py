@@ -51,3 +51,22 @@ def build_docs(ctx: Context) -> None:
 def serve_docs(ctx: Context) -> None:
     """Serve documentation."""
     ctx.run("uv run mkdocs serve --config-file docs/mkdocs.yaml", echo=True, pty=not WINDOWS)
+
+
+@task
+def verify(ctx: Context) -> None:
+    """
+    Run all MLOps quality checks: formatting, linting, types, and tests.
+    Targets the entire project.
+    """
+    print("--- 1. Running Ruff Formatter ---")
+    ctx.run("uv run ruff format .", echo=True, warn=True)
+
+    print("\n--- 2. Running Ruff Linter ---")
+    ctx.run("uv run ruff check . --fix", echo=True, warn=True)
+
+    print("\n--- 3. Running Mypy Type Checker ---")
+    ctx.run("uv run mypy src", echo=True, warn=True)
+
+    print("\n--- 4. Running All Pytests ---")
+    ctx.run("uv run pytest tests", echo=True, warn=True)
