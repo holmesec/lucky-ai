@@ -5,6 +5,7 @@ from torch.utils.data import Dataset
 import pandas as pd
 import torch
 
+
 RAW_DIR = Path("data/raw")
 PROCESSED_DIR = Path("data/processed")
 
@@ -26,11 +27,14 @@ class LuckyDataset(Dataset):
 
     
 
-def preprocess(subset="all") -> None:
+def preprocess(subset: str = "all") -> None:
     print("Preprocessing data...")
 
-    if subset == "all" or "commonsense":
+    if subset == "all" or subset == "commonsense":
         preprocess_commonsense()
+    if  subset == "all" or subset == "justice":
+        preprocess_justice()
+
 
 
 def preprocess_commonsense() -> None:
@@ -55,6 +59,26 @@ def preprocess_commonsense() -> None:
 
         print(f"Processed {file.name} -> {out_path}")
 
+def preprocess_justice() -> None:
+    "Preprocess justice data from ETHICS dataset."
+    print("Preprocessing justice data...")
+
+    justice_dir = RAW_DIR / "ethics" / "justice"
+
+    train_path = justice_dir / "justice_train.csv"
+    test_path = justice_dir / "justice_test.csv"
+
+    for file in [train_path, test_path]:
+        df = pd.read_csv(file)
+        df.rename(columns={"scenario": "input"}, inplace=True)
+        df['label'] = df['label'].astype(bool)
+
+        out_path = PROCESSED_DIR / file.name
+        df.to_csv(out_path, index=False)
+
+        print(f"Processed {file.name} -> {out_path}")
 
 if __name__ == "__main__":
-    typer.run(preprocess)
+    #typer.run(preprocess)
+
+    preprocess_strategyQA()
