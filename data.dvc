@@ -1,6 +1,102 @@
 outs:
-- md5: e11b0b30d49bfc032d48250f1bcebd46.dir
-  size: 26198953
-  nfiles: 14
-  hash: md5
+- hash: md5
   path: data
+  files:
+  - relpath: processed/boolq_test.parquet
+    md5: 9a6ac1cc61d7bb8d7986e50eb34350b0
+    size: 100731
+    cloud:
+      remote_storage:
+        etag: 08aaa8b6d7f68d92031001
+        version_id: '1768493232788522'
+  - relpath: processed/boolq_train.parquet
+    md5: 646a6876b81f9943ad29b4fbd372ea5d
+    size: 291828
+    cloud:
+      remote_storage:
+        etag: 08bdcfd3d7f68d92031001
+        version_id: '1768493233268669'
+  - relpath: processed/cm_test.parquet
+    md5: fa259493011d83cba0cee41697425b0c
+    size: 69627
+    cloud:
+      remote_storage:
+        etag: 08adacc2d7f68d92031001
+        version_id: '1768493232985645'
+  - relpath: processed/cm_train.parquet
+    md5: af68d0f098f16f713cbc46d0f4ddf1c3
+    size: 223071
+    cloud:
+      remote_storage:
+        etag: 08a3fdd1d7f68d92031001
+        version_id: '1768493233241763'
+  - relpath: processed/justice_test.parquet
+    md5: 05443afea8806b497eae21c83163a48e
+    size: 102289
+    cloud:
+      remote_storage:
+        etag: 08d9f18fd7f68d92031001
+        version_id: '1768493232158937'
+  - relpath: processed/justice_train.parquet
+    md5: 7a87006cb492bcf1b01f311fba8ffa78
+    size: 847324
+    cloud:
+      remote_storage:
+        etag: 08b88ccad8f68d92031001
+        version_id: '1768493235209784'
+  - relpath: processed/strategyqa_test.parquet
+    md5: 02f986a96b0a1c283025ed4b26175335
+    size: 31658
+    cloud:
+      remote_storage:
+        etag: 08e5a6b3d7f68d92031001
+        version_id: '1768493232739173'
+  - relpath: processed/strategyqa_train.parquet
+    md5: 1f1d7d6ec6e75d47f6604e3e0a2e213c
+    size: 69897
+    cloud:
+      remote_storage:
+        etag: 08f8a8bdd7f68d92031001
+        version_id: '1768493232903288'
+  - relpath: raw/ethics/commonsense/cm_test.csv
+    md5: f87ab2ac78f69f189d2aa8ae78b53419
+    size: 3180898
+    cloud:
+      remote_storage:
+        etag: 08cff7dcd9f68d92031001
+        version_id: '1768493237615567'
+  - relpath: raw/ethics/commonsense/cm_test_hard.csv
+    md5: ca1ea460d4a8f653ce56aa4404f415e2
+    size: 3898031
+    cloud:
+      remote_storage:
+        etag: 08aaa286d9f68d92031001
+        version_id: '1768493236195626'
+  - relpath: raw/ethics/commonsense/cm_train.csv
+    md5: 70226f63692282c22032a328bc3dfc9c
+    size: 14546224
+    cloud:
+      remote_storage:
+        etag: 088ac8c9dbf68d92031001
+        version_id: '1768493241492490'
+  - relpath: raw/ethics/justice/justice_test.csv
+    md5: 27fff54e5db2aafc5e79f945f7c1e494
+    size: 286706
+    cloud:
+      remote_storage:
+        etag: 08d1becfd7f68d92031001
+        version_id: '1768493233200977'
+  - relpath: raw/ethics/justice/justice_test_hard.csv
+    md5: ff0490d0bc07497ba113aa0e440220fd
+    size: 219461
+    cloud:
+      remote_storage:
+        etag: 08e38bd3d7f68d92031001
+        version_id: '1768493233260003'
+  - relpath: raw/ethics/justice/justice_train.csv
+    md5: 866d9b86ba8fbc5972879a2397ff3f2f
+    size: 2331208
+    cloud:
+      remote_storage:
+        etag: 08c7def8d8f68d92031001
+        version_id: '1768493235973959'
