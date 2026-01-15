@@ -52,8 +52,8 @@ def preprocess_boolq() -> None:
         df = df[["question", "answer"]]
         df.rename(columns={"question": "input", "answer": "label"}, inplace=True)
 
-        out_path = PROCESSED_DIR / f"boolq_{split}.csv"
-        df.to_csv(out_path, index=False)
+        out_path = PROCESSED_DIR / f"boolq_{split}.parquet"
+        df.to_parquet(out_path, index=False)
         print(f"Saved {out_path}")
 
 def preprocess_strategyQA() -> None:
@@ -66,8 +66,8 @@ def preprocess_strategyQA() -> None:
         df = df[["question", "answer"]]
         df.rename(columns={"question": "input", "answer": "label"}, inplace=True)
 
-        out_path = PROCESSED_DIR / f"strategyqa_{split}.csv"
-        df.to_csv(out_path, index=False)
+        out_path = PROCESSED_DIR / f"strategyqa_{split}.parquet"
+        df.to_parquet(out_path, index=False)
         print(f"Saved {out_path}")
     
 
@@ -88,8 +88,8 @@ def preprocess_commonsense() -> None:
         # Invert labels as 0 corresponds to acceptable and 1 to unacceptable in  dataset
         df['label'] = ~df['label'].astype(bool)
 
-        out_path = PROCESSED_DIR / file.name
-        df.to_csv(out_path, index=False)
+        out_path = PROCESSED_DIR / (file.stem + ".parquet")
+        df.to_parquet(out_path, index=False)
 
         print(f"Processed {file.name} -> {out_path}")
 
@@ -108,8 +108,8 @@ def preprocess_justice() -> None:
         df.rename(columns={"scenario": "input"}, inplace=True)
         df['label'] = df['label'].astype(bool)
 
-        out_path = PROCESSED_DIR / file.name
-        df.to_csv(out_path, index=False)
+        out_path = PROCESSED_DIR / (file.stem + ".parquet")
+        df.to_parquet(out_path, index=False)
 
         print(f"Processed {file.name} -> {out_path}")
 
