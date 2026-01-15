@@ -4,6 +4,7 @@ import typer
 from torch.utils.data import Dataset
 import pandas as pd
 import torch
+import os
 from datasets import load_dataset
 
 RAW_DIR = Path("data/raw")
@@ -12,18 +13,33 @@ PROCESSED_DIR = Path("data/processed")
 class LuckyDataset(Dataset):
     """Dataset with questions and dilemmas."""
 
-    def __init__(self, data_path: Path) -> None:
+    def __init__(self, train: bool = True) -> None:
         super().__init__()
-        self.data_path = data_path
-
-    def __len__(self) -> int:
-        """Return the length of the dataset."""
-
-    def __getitem__(self, index: int):
-        """Return a given sample from the dataset."""
+        self.mode = "train" if train else "test"
+        self.load_data()
 
     def load_data(self) -> None:
-        """Load data from the data path."""
+        """Load questions (strings) and targets (tensor) from disk."""
+        questions, target = [], []
+        for f in os.listdir(PROCESSED_DIR):
+            if self.mode not in f:
+                continue
+            df = pd.read_parquet(PROCESSED_DIR / f)
+            questions.extend(df["input"].astype(str).tolist())
+            target.extend(df["label"].astype(bool).tolist())
+
+        self.questions = questions  # list of strings
+        self.target = torch.tensor(target, dtype=torch.bool)  # tensor of bools
+
+    def __getitem__(self, idx: int) -> tuple[str, torch.Tensor]:
+        """Return question (string) and target (tensor)."""
+        question = self.questions[idx]
+        target = self.target[idx]
+        return question, target
+
+    def __len__(self) -> int:
+        """Return the number of questions in the dataset."""
+        return len(self.questions)
 
     
 
@@ -114,4 +130,7 @@ def preprocess_justice() -> None:
         print(f"Processed {file.name} -> {out_path}")
 
 if __name__ == "__main__":
-    typer.run(preprocess)
+    #typer.run(preprocess)
+
+    a = LuckyDataset(train=True)
+    print()
