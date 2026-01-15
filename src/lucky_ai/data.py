@@ -43,7 +43,18 @@ class LuckyDataset(Dataset):
 app = typer.Typer()
 
 @app.command()
-def preprocess(subset: str = "all") -> None:
+def preprocess(subset: str = "all",) -> None:
+    """
+    Preprocess datasets and store them as parquet files.
+
+    subset options:
+    - all           : run all preprocessors
+    - commonsense   : ETHICS commonsense dataset
+    - justice       : ETHICS justice dataset
+    - strategyqa    : StrategyQA dataset
+    - boolq         : Google BoolQ dataset
+    """
+    
     print("Preprocessing data...")
 
     if subset == "all" or subset == "commonsense":
@@ -129,5 +140,3 @@ def preprocess_justice() -> None:
 
         print(f"Processed {file.name} -> {out_path}")
 
-# if __name__ == "__main__":
-#     typer.run(preprocess)
