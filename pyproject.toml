@@ -23,6 +23,7 @@ dependencies = [
     "fastapi==0.115.6",
     "pandas>=2.3.3",
     "pathspec>=0.11.1,<0.12",
+    "hydra-core>=1.3.2",
     "pytorch-lightning>=2.6.0",
     "pywin32>=311",
     "torch==2.6.0",

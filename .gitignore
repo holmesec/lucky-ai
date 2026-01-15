@@ -13,3 +13,9 @@
 # data files
 data/
 /data
+# Coverage reports
+.coverage
+
+# Outputs
+outputs/
+
