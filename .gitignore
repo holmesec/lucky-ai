@@ -8,3 +8,10 @@
 # Environment
 .env
 .venv
+
+# Coverage reports
+.coverage
+
+# Outputs
+outputs/
+

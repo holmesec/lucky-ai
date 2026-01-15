@@ -1,0 +1,7 @@
+defaults:
+  - model: bert_base
+  - training: default
+  - _self_
+
+# Global seed for reproducibility
+seed: 42

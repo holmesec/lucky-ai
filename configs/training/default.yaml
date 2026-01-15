@@ -1,0 +1,6 @@
+max_epochs: 3
+batch_size: 16
+accelerator: "auto"
+devices: 1
+log_every_n_steps: 10
+precision: "16-mixed"
