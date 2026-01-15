@@ -11,7 +11,7 @@ RAW_DIR = Path("data/raw")
 PROCESSED_DIR = Path("data/processed")
 
 class LuckyDataset(Dataset):
-    """Dataset with questions and dilemmas."""
+    """Dataset with questions and boolean dilemmas."""
 
     def __init__(self, train: bool = True) -> None:
         super().__init__()
@@ -19,20 +19,17 @@ class LuckyDataset(Dataset):
         self.load_data()
 
     def load_data(self) -> None:
-        """Load questions (strings) and targets (tensor) from disk."""
-        questions, target = [], []
+        """Load questions (strings) and targets (bool) from disk."""
+        self.questions, self.target = [], []
         for f in os.listdir(PROCESSED_DIR):
             if self.mode not in f:
                 continue
             df = pd.read_parquet(PROCESSED_DIR / f)
-            questions.extend(df["input"].astype(str).tolist())
-            target.extend(df["label"].astype(bool).tolist())
+            self.questions.extend(df["input"].astype(str).tolist())
+            self.target.extend(df["label"].astype(bool).tolist())
 
-        self.questions = questions  # list of strings
-        self.target = torch.tensor(target, dtype=torch.bool)  # tensor of bools
-
-    def __getitem__(self, idx: int) -> tuple[str, torch.Tensor]:
-        """Return question (string) and target (tensor)."""
+    def __getitem__(self, idx: int) -> tuple[str, bool]:
+        """Return question (string) and target (bool)."""
         question = self.questions[idx]
         target = self.target[idx]
         return question, target
@@ -133,4 +130,3 @@ if __name__ == "__main__":
     #typer.run(preprocess)
 
     a = LuckyDataset(train=True)
-    print()
