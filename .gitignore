@@ -9,6 +9,10 @@
 .env
 .venv
 
+
+# data files
+data/
+/data
 # Coverage reports
 .coverage
 
