@@ -6,6 +6,7 @@ import pandas as pd
 import torch
 import os
 from datasets import load_dataset
+import typer
 
 RAW_DIR = Path("data/raw")
 PROCESSED_DIR = Path("data/processed")
@@ -39,7 +40,9 @@ class LuckyDataset(Dataset):
         return len(self.questions)
 
     
+app = typer.Typer()
 
+@app.command()
 def preprocess(subset: str = "all") -> None:
     print("Preprocessing data...")
 
@@ -126,7 +129,5 @@ def preprocess_justice() -> None:
 
         print(f"Processed {file.name} -> {out_path}")
 
-if __name__ == "__main__":
-    #typer.run(preprocess)
-
-    a = LuckyDataset(train=True)
+# if __name__ == "__main__":
+#     typer.run(preprocess)
