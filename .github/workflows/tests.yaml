@@ -37,6 +37,11 @@ jobs:
       run: |
         echo "GOOGLE_APPLICATION_CREDENTIALS=$PWD/gcp-key.json" >> $GITHUB_ENV
 
+    - name: Debug GCP credentials
+      run: |
+        echo $GOOGLE_APPLICATION_CREDENTIALS
+        cat $GOOGLE_APPLICATION_CREDENTIALS
+
     - name: Pull data with DVC
       run: |
         uv run dvc pull
