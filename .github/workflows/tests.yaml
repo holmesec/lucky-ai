@@ -27,10 +27,20 @@ jobs:
       run: |
         uv sync --dev
 
-    # - name: Pull data with DVC
-    #   run: |
-    #     uv run dvc pull
+    - name: Set up GCP credentials
+      run: |
+        echo "$GCLOUD_SERVICE_KEY" > gcp-key.json
+      env:
+        GCLOUD_SERVICE_KEY: ${{ secrets.GCLOUD_SERVICE_KEY  }}
 
-    # - name: Test with pytest
-    #   run: |
-    #     uv run pytest -v
+    - name: Set GOOGLE_APPLICATION_CREDENTIALS
+      run: |
+        echo "GOOGLE_APPLICATION_CREDENTIALS=$PWD/gcp-key.json" >> $GITHUB_ENV
+
+    - name: Pull data with DVC
+      run: |
+        uv run dvc pull
+
+    - name: Test with pytest
+      run: |
+        uv run pytest -v
