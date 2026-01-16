@@ -2,9 +2,9 @@ name: "Run pytest tests"
 
 on:
   push:
-    branches: [ master, main ]
+    branches: [ master, main, github-actions ]
   pull_request:
-    branches: [ master, main ]
+    branches: [ master, main, github-actions  ]
 
 jobs:
   build:
