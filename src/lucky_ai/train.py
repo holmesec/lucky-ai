@@ -1,48 +1,58 @@
-from typing import Any
-
+from typing import Any, Optional
 import hydra
+from dotenv import load_dotenv
 import pytorch_lightning as pl
 from omegaconf import DictConfig, OmegaConf
-
+from pytorch_lightning.loggers import WandbLogger
 from lucky_ai.model import LuckyBertModel
+from lucky_ai.data import LuckyDataModule
+
+load_dotenv()
 
 
 @hydra.main(config_path="../../configs", config_name="config.yaml", version_base="1.1")
 def train(cfg: DictConfig) -> None:
     """
-    Main training loop.
-
-    Args:
-        cfg: The Hydra configuration object.
+    Main training entry point.
+    Uses Hydra for configuration and Lightning for training execution.
     """
-    # Reproducibility: Set seeds
+    # Reproducibility settings
     pl.seed_everything(cfg["seed"])
 
-    # Print config for debugging
+    # Log the full configuration for traceability
     print(f"Configuration:\n{OmegaConf.to_yaml(cfg)}")
 
-    # Initialize Model
-    # We cast to Any to avoid "MutableMapping" attribute errors
+    # Initialize the DataModule
+    data_cfg: Any = cfg["data"]
     model_cfg: Any = cfg["model"]
+    dm = LuckyDataModule(model_name=model_cfg["model_name"], batch_size=data_cfg["batch_size"])
+
+    # Initialize the Model
     model = LuckyBertModel(model_name=model_cfg["model_name"], lr=model_cfg["lr"])
 
-    # Initialize Trainer
     train_cfg: Any = cfg["training"]
+    logger: Optional[WandbLogger] = None
 
+    if train_cfg["logger"]["enabled"]:
+        logger = WandbLogger(
+            project=train_cfg["logger"]["project"], entity="lucky_ai", log_model=train_cfg["logger"]["log_model"]
+        )
+        # Optional: Watch the model to see gradients in WandB
+        logger.watch(model, log="all")
+
+    # Initialize the Trainer
     trainer = pl.Trainer(
         max_epochs=train_cfg["max_epochs"],
         accelerator=train_cfg["accelerator"],
         devices=train_cfg["devices"],
         precision=train_cfg["precision"],
         log_every_n_steps=train_cfg["log_every_n_steps"],
+        logger=logger,
         default_root_dir="models/",
     )
 
-    # 5. Fit Model
-    print(f"Trainer configured with {train_cfg['max_epochs']} epochs.")
-    print("Training script initialized. Ready for DataModule integration.")
-
-    # trainer.fit(model, datamodule=dm)
+    # Start training
+    trainer.fit(model, datamodule=dm)
 
 
 if __name__ == "__main__":

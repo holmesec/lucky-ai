@@ -1,7 +1,13 @@
 defaults:
   - model: bert_base
   - training: default
+  - data: default
   - _self_
+
+# Tells Hydra NOT to change the working directory.
+hydra:
+  job:
+    chdir: False
 
 # Global seed for reproducibility
 seed: 42

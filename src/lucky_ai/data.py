@@ -1,10 +1,13 @@
 from pathlib import Path
-
-import typer
-from torch.utils.data import Dataset
-import pandas as pd
 import os
+import pandas as pd
+import torch
+import pytorch_lightning as pl
+from torch.utils.data import Dataset, DataLoader
+from transformers import BertTokenizerFast
 from datasets import load_dataset
+from typing import Optional
+import typer
 
 RAW_DIR = Path("data/raw")
 PROCESSED_DIR = Path("data/processed")
@@ -37,6 +40,41 @@ class LuckyDataset(Dataset):
     def __len__(self) -> int:
         """Return the number of questions in the dataset."""
         return len(self.questions)
+
+
+class LuckyDataModule(pl.LightningDataModule):
+    """Bridges raw strings to BERT tensors using a fast tokenizer"""
+
+    def __init__(self, model_name: str = "bert-base-uncased", batch_size: int = 16) -> None:
+        super().__init__()
+        self.batch_size = batch_size
+        self.tokenizer = BertTokenizerFast.from_pretrained(model_name)
+
+    def setup(self, stage: Optional[str] = None) -> None:
+        """Initializes the datasets"""
+        self.train_set = LuckyDataset(train=True)
+        self.test_set = LuckyDataset(train=False)
+
+    def collate_fn(self, batch: list[tuple[str, bool]]) -> dict[str, torch.Tensor]:
+        """Tokenizes text and converts labels to tensors for the model"""
+        texts = [item[0] for item in batch]
+        labels = [item[1] for item in batch]
+
+        encodings = self.tokenizer(texts, return_tensors="pt", padding=True, truncation=True, max_length=128)
+
+        return {
+            "input_ids": encodings["input_ids"],
+            "attention_mask": encodings["attention_mask"],
+            "labels": torch.tensor(labels).long(),
+        }
+
+    def train_dataloader(self) -> DataLoader:
+        return DataLoader(
+            self.train_set, batch_size=self.batch_size, collate_fn=self.collate_fn, shuffle=True, num_workers=0
+        )
+
+    def val_dataloader(self) -> DataLoader:
+        return DataLoader(self.test_set, batch_size=self.batch_size, collate_fn=self.collate_fn, num_workers=0)
 
 
 app = typer.Typer()

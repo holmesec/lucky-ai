@@ -19,8 +19,10 @@ class LuckyBertModel(pl.LightningModule):
     def __init__(self, model_name: str = "bert-base-uncased", lr: float = 1e-5) -> None:
         super().__init__()
         # Save hyperparameters to self.hparams for reproducibility
+
         self.save_hyperparameters()
         self.bert = BertModel.from_pretrained(self.hparams["model_name"])
+        self.bert.train()
         self.classifier = nn.Linear(self.bert.config.hidden_size, 2)
         self.criterion = nn.CrossEntropyLoss()
 
@@ -32,6 +34,7 @@ class LuckyBertModel(pl.LightningModule):
 
     def training_step(self, batch: dict[str, torch.Tensor], batch_idx: int) -> torch.Tensor:
         """Individual training step."""
+
         input_ids, attention_mask, labels = batch["input_ids"], batch["attention_mask"], batch["labels"]
 
         logits = self(input_ids, attention_mask)
