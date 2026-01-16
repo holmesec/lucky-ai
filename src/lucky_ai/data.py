@@ -1,15 +1,17 @@
 from pathlib import Path
-
-import typer
-from torch.utils.data import Dataset
+import os
 import pandas as pd
 import torch
-import os
+import pytorch_lightning as pl
+from torch.utils.data import Dataset, DataLoader
+from transformers import BertTokenizerFast
 from datasets import load_dataset
+from typing import Optional
 import typer
 
 RAW_DIR = Path("data/raw")
 PROCESSED_DIR = Path("data/processed")
+
 
 class LuckyDataset(Dataset):
     """Dataset with questions and boolean dilemmas."""
@@ -39,11 +41,49 @@ class LuckyDataset(Dataset):
         """Return the number of questions in the dataset."""
         return len(self.questions)
 
-    
+
+class LuckyDataModule(pl.LightningDataModule):
+    """Bridges raw strings to BERT tensors using a fast tokenizer"""
+
+    def __init__(self, model_name: str = "bert-base-uncased", batch_size: int = 16) -> None:
+        super().__init__()
+        self.batch_size = batch_size
+        self.tokenizer = BertTokenizerFast.from_pretrained(model_name)
+
+    def setup(self, stage: Optional[str] = None) -> None:
+        """Initializes the datasets"""
+        self.train_set = LuckyDataset(train=True)
+        self.test_set = LuckyDataset(train=False)
+
+    def collate_fn(self, batch: list[tuple[str, bool]]) -> dict[str, torch.Tensor]:
+        """Tokenizes text and converts labels to tensors for the model"""
+        texts = [item[0] for item in batch]
+        labels = [item[1] for item in batch]
+
+        encodings = self.tokenizer(texts, return_tensors="pt", padding=True, truncation=True, max_length=128)
+
+        return {
+            "input_ids": encodings["input_ids"],
+            "attention_mask": encodings["attention_mask"],
+            "labels": torch.tensor(labels).long(),
+        }
+
+    def train_dataloader(self) -> DataLoader:
+        return DataLoader(
+            self.train_set, batch_size=self.batch_size, collate_fn=self.collate_fn, shuffle=True, num_workers=0
+        )
+
+    def val_dataloader(self) -> DataLoader:
+        return DataLoader(self.test_set, batch_size=self.batch_size, collate_fn=self.collate_fn, num_workers=0)
+
+
 app = typer.Typer()
 
+
 @app.command()
-def preprocess(subset: str = "all",) -> None:
+def preprocess(
+    subset: str = "all",
+) -> None:
     """
     Preprocess datasets and store them as parquet files.
 
@@ -54,12 +94,12 @@ def preprocess(subset: str = "all",) -> None:
     - strategyqa    : StrategyQA dataset
     - boolq         : Google BoolQ dataset
     """
-    
+
     print("Preprocessing data...")
 
     if subset == "all" or subset == "commonsense":
         preprocess_commonsense()
-    if  subset == "all" or subset == "justice":
+    if subset == "all" or subset == "justice":
         preprocess_justice()
     if subset == "all" or subset == "strategyqa":
         preprocess_strategyQA()
@@ -83,6 +123,7 @@ def preprocess_boolq() -> None:
         df.to_parquet(out_path, index=False)
         print(f"Saved {out_path}")
 
+
 def preprocess_strategyQA() -> None:
     "Preprocess QA data from the StrategyQA dataset."
     ds = load_dataset("ChilleD/StrategyQA")
@@ -96,7 +137,7 @@ def preprocess_strategyQA() -> None:
         out_path = PROCESSED_DIR / f"strategyqa_{split}.parquet"
         df.to_parquet(out_path, index=False)
         print(f"Saved {out_path}")
-    
+
 
 def preprocess_commonsense() -> None:
     "Preprocess commonsense data from ETHICS dataset."
@@ -109,11 +150,11 @@ def preprocess_commonsense() -> None:
 
     for file in [train_path, test_path]:
         df = pd.read_csv(file)
-        df = df[df["is_short"] == True]
+        df = df[df["is_short"]]
         df = df[["label", "input"]]
 
-        # Invert labels as 0 corresponds to acceptable and 1 to unacceptable in  dataset
-        df['label'] = ~df['label'].astype(bool)
+        # Invert labels as 0 corresponds to acceptable and 1 to unacceptable in dataset
+        df["label"] = ~df["label"].astype(bool)
 
         out_path = PROCESSED_DIR / (file.stem + ".parquet")
         df.to_parquet(out_path, index=False)
@@ -133,10 +174,9 @@ def preprocess_justice() -> None:
     for file in [train_path, test_path]:
         df = pd.read_csv(file)
         df.rename(columns={"scenario": "input"}, inplace=True)
-        df['label'] = df['label'].astype(bool)
+        df["label"] = df["label"].astype(bool)
 
         out_path = PROCESSED_DIR / (file.stem + ".parquet")
         df.to_parquet(out_path, index=False)
 
         print(f"Processed {file.name} -> {out_path}")
-

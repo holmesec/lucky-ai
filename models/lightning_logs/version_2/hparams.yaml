@@ -1,0 +1,2 @@
+model_name: bert-base-uncased
+lr: 2.0e-05
