@@ -1,9 +1,13 @@
-from typing import Any
+from typing import Any, Optional
 import hydra
+from dotenv import load_dotenv
 import pytorch_lightning as pl
 from omegaconf import DictConfig, OmegaConf
+from pytorch_lightning.loggers import WandbLogger
 from lucky_ai.model import LuckyBertModel
 from lucky_ai.data import LuckyDataModule
+
+load_dotenv()
 
 
 @hydra.main(config_path="../../configs", config_name="config.yaml", version_base="1.1")
@@ -26,30 +30,28 @@ def train(cfg: DictConfig) -> None:
     # Initialize the Model
     model = LuckyBertModel(model_name=model_cfg["model_name"], lr=model_cfg["lr"])
 
-    # Initialize the Trainer
     train_cfg: Any = cfg["training"]
-    # trainer = pl.Trainer(
-    #     max_epochs=train_cfg["max_epochs"],
-    #     accelerator=train_cfg["accelerator"],
-    #     devices=train_cfg["devices"],
-    #     precision=train_cfg["precision"],
-    #     log_every_n_steps=train_cfg["log_every_n_steps"],
-    #     default_root_dir="models/"
-    # )
+    logger: Optional[WandbLogger] = None
 
+    if train_cfg["logger"]["enabled"]:
+        logger = WandbLogger(
+            project=train_cfg["logger"]["project"], entity="lucky_ai", log_model=train_cfg["logger"]["log_model"]
+        )
+        # Optional: Watch the model to see gradients in WandB
+        logger.watch(model, log="all")
+
+    # Initialize the Trainer
     trainer = pl.Trainer(
         max_epochs=train_cfg["max_epochs"],
         accelerator=train_cfg["accelerator"],
         devices=train_cfg["devices"],
         precision=train_cfg["precision"],
-        limit_train_batches=0.001,
-        limit_val_batches=0.005,
-        log_every_n_steps=1,
+        log_every_n_steps=train_cfg["log_every_n_steps"],
+        logger=logger,
         default_root_dir="models/",
     )
 
-    # Execute fine-tuning
-    print("Starting training process")
+    # Start training
     trainer.fit(model, datamodule=dm)
 
 

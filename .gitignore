@@ -18,4 +18,10 @@ data/
 
 # Outputs
 outputs/
+/models/lightning_logs/
+
+# WandB files
+wandb/
+
+
 
