@@ -45,9 +45,10 @@ class LuckyDataset(Dataset):
 class LuckyDataModule(pl.LightningDataModule):
     """Bridges raw strings to BERT tensors using a fast tokenizer"""
 
-    def __init__(self, model_name: str = "bert-base-uncased", batch_size: int = 16) -> None:
+    def __init__(self, model_name: str = "bert-base-uncased", batch_size: int = 16, num_workers: int = 0) -> None:
         super().__init__()
         self.batch_size = batch_size
+        self.num_workers = num_workers
         self.tokenizer = BertTokenizerFast.from_pretrained(model_name)
 
     def setup(self, stage: Optional[str] = None) -> None:
@@ -70,7 +71,7 @@ class LuckyDataModule(pl.LightningDataModule):
 
     def train_dataloader(self) -> DataLoader:
         return DataLoader(
-            self.train_set, batch_size=self.batch_size, collate_fn=self.collate_fn, shuffle=True, num_workers=0
+            self.train_set, batch_size=self.batch_size, collate_fn=self.collate_fn, shuffle=True, num_workers=self.num_workers
         )
 
     def val_dataloader(self) -> DataLoader:
