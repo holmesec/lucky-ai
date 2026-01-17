@@ -25,7 +25,7 @@ def train(cfg: DictConfig) -> None:
     # Initialize the DataModule
     data_cfg: Any = cfg["data"]
     model_cfg: Any = cfg["model"]
-    dm = LuckyDataModule(model_name=model_cfg["model_name"], batch_size=data_cfg["batch_size"])
+    dm = LuckyDataModule(model_name=model_cfg["model_name"], batch_size=data_cfg["batch_size"], num_workers=data_cfg["num_workers"])
 
     # Initialize the Model
     model = LuckyBertModel(model_name=model_cfg["model_name"], lr=model_cfg["lr"])
