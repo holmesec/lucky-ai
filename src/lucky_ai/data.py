@@ -16,18 +16,24 @@ PROCESSED_DIR = Path("data/processed")
 class LuckyDataset(Dataset):
     """Dataset with questions and boolean dilemmas."""
 
-    def __init__(self, train: bool = True) -> None:
+    def __init__(self, train: bool = True, data_dir: str = "data/processed") -> None:
         super().__init__()
         self.mode = "train" if train else "test"
+        self.data_dir = Path(data_dir)
         self.load_data()
 
     def load_data(self) -> None:
         """Load questions (strings) and targets (bool) from disk."""
+
         self.questions, self.target = [], []
-        for f in os.listdir(PROCESSED_DIR):
+
+        if not self.data_dir.exists():
+            raise FileNotFoundError(f"Data directory not found: {self.data_dir.absolute()}")
+
+        for f in os.listdir(self.data_dir):
             if self.mode not in f:
                 continue
-            df = pd.read_parquet(PROCESSED_DIR / f)
+            df = pd.read_parquet(self.data_dir / f)
             self.questions.extend(df["input"].astype(str).tolist())
             self.target.extend(df["label"].astype(bool).tolist())
 
@@ -45,16 +51,23 @@ class LuckyDataset(Dataset):
 class LuckyDataModule(pl.LightningDataModule):
     """Bridges raw strings to BERT tensors using a fast tokenizer"""
 
-    def __init__(self, model_name: str = "bert-base-uncased", batch_size: int = 16, num_workers: int = 0) -> None:
+    def __init__(
+        self,
+        model_name: str = "bert-base-uncased",
+        batch_size: int = 16,
+        num_workers: int = 0,
+        data_dir: str = "data/processed",
+    ) -> None:
         super().__init__()
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.tokenizer = BertTokenizerFast.from_pretrained(model_name)
+        self.data_dir = data_dir
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Initializes the datasets"""
-        self.train_set = LuckyDataset(train=True)
-        self.test_set = LuckyDataset(train=False)
+        self.train_set = LuckyDataset(train=True, data_dir=self.data_dir)
+        self.test_set = LuckyDataset(train=False, data_dir=self.data_dir)
 
     def collate_fn(self, batch: list[tuple[str, bool]]) -> dict[str, torch.Tensor]:
         """Tokenizes text and converts labels to tensors for the model"""
@@ -71,7 +84,11 @@ class LuckyDataModule(pl.LightningDataModule):
 
     def train_dataloader(self) -> DataLoader:
         return DataLoader(
-            self.train_set, batch_size=self.batch_size, collate_fn=self.collate_fn, shuffle=True, num_workers=self.num_workers
+            self.train_set,
+            batch_size=self.batch_size,
+            collate_fn=self.collate_fn,
+            shuffle=True,
+            num_workers=self.num_workers,
         )
 
     def val_dataloader(self) -> DataLoader:

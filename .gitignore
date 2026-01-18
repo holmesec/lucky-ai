@@ -11,8 +11,8 @@
 
 
 # data files
-data/
-/data
+
+/data/
 # Coverage reports
 .coverage
 

@@ -1,0 +1,5 @@
+# Data settings
+batch_size: 16
+max_length: 128
+num_workers: 0
+path: "data/processed"

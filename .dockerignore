@@ -1,0 +1,19 @@
+# Git and DVC
+.git/
+.dvc/
+/data/
+
+# Python Caches
+**/__pycache__/
+*.pyc
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# Environments
+.venv/
+.env
+
+# Build outputs
+outputs/
+models/
