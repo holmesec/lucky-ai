@@ -6,6 +6,9 @@ from omegaconf import DictConfig, OmegaConf
 from pytorch_lightning.loggers import WandbLogger
 from lucky_ai.model import LuckyBertModel
 from lucky_ai.data import LuckyDataModule
+from pathlib import Path
+import tempfile
+import wandb
 
 load_dotenv()
 
@@ -58,6 +61,26 @@ def train(cfg: DictConfig) -> None:
 
     # Start training
     trainer.fit(model, datamodule=dm)
+
+    # Save + log final model
+    if logger is not None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            ckpt_path = Path(tmpdir) / "model.ckpt"
+
+            trainer.save_checkpoint(ckpt_path)
+
+            artifact = wandb.Artifact(
+                name="lucky_bert",
+                type="model",
+                description="Final fine-tuned BERT model",
+            )
+
+            artifact.add_file(str(ckpt_path))
+
+            logger.experiment.log_artifact(
+                artifact,
+                aliases=["latest"],
+            )
 
 
 if __name__ == "__main__":
