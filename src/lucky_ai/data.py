@@ -127,9 +127,10 @@ def preprocess(
 
 def preprocess_boolq() -> None:
     "Preprocess boolean questions from the BoolQ dataset."
+    print("Preprocessing boolq dataset...")
     ds = load_dataset("google/boolq")
-    ds["test"] = ds.pop("validation")
 
+    ds["test"] = ds.pop("validation")
     # Extract train and validation splits
     for split in ["train", "test"]:
         df = ds[split].to_pandas()
@@ -144,11 +145,13 @@ def preprocess_boolq() -> None:
 
 def preprocess_strategyQA() -> None:
     "Preprocess QA data from the StrategyQA dataset."
+    print("Preprocessing strategyqa dataset...")
+
     ds = load_dataset("ChilleD/StrategyQA")
     # Extract train and test splits
     for split in ["train", "test"]:
         df = ds[split].to_pandas()
-        # Keep only 'question' and 'label' columns
+        # Keep only 'question' and 'answer' columns
         df = df[["question", "answer"]]
         df.rename(columns={"question": "input", "answer": "label"}, inplace=True)
 
