@@ -1,0 +1,18 @@
+steps:
+  # Step 1: Build the Docker image with a unique tag
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'build', 
+      '-t', 'europe-west1-docker.pkg.dev/$PROJECT_ID/lucky-ai-repo/train-image:$BUILD_ID', 
+      '-t', 'europe-west1-docker.pkg.dev/$PROJECT_ID/lucky-ai-repo/train-image:latest',
+      '-f', 'dockerfiles/train.dockerfile', 
+      '.'
+    ]
+
+# Push BOTH the unique tag and the latest tag
+images:
+  - 'europe-west1-docker.pkg.dev/$PROJECT_ID/lucky-ai-repo/train-image:$BUILD_ID'
+  - 'europe-west1-docker.pkg.dev/$PROJECT_ID/lucky-ai-repo/train-image:latest'
+
+options:
+  logging: CLOUD_LOGGING_ONLY

@@ -1,0 +1,16 @@
+workerPoolSpecs:
+- machineSpec:
+    machineType: n1-standard-4
+    acceleratorType: NVIDIA_TESLA_T4
+    acceleratorCount: 1
+  replicaCount: 1
+  containerSpec:
+    imageUri: europe-west1-docker.pkg.dev/dtumlops-484507/lucky-ai-repo/train-image:<YOUR_IMAGE_TAG>
+    command: ["python", "src/lucky_ai/train.py"]
+    args:
+      - "training.max_epochs=1"
+      - "data.num_workers=4"
+      - "data.path=/gcs/lucky_ai/data/processed"
+    env:
+      - name: WANDB_API_KEY
+        value: "YOUR_WANDB_API_KEY_HERE"
