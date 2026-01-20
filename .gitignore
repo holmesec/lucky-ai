@@ -11,7 +11,7 @@
 
 
 # data files
-
+/data
 /data/
 # Coverage reports
 .coverage
@@ -22,6 +22,3 @@ outputs/
 
 # WandB files
 wandb/
-
-
-

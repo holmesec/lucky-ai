@@ -100,3 +100,6 @@ outs:
       remote_storage:
         etag: 08c7def8d8f68d92031001
         version_id: '1768493235973959'
+  - relpath: raw/ethics/test/test.txt
+    md5: d41d8cd98f00b204e9800998ecf8427e
+    size: 0
