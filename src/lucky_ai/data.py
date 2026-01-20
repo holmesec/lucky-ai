@@ -14,40 +14,45 @@ PROCESSED_DIR = Path("data/processed")
 
 
 class LuckyDataset(Dataset):
-    name: str = "LuckyDataset"
-
     """Dataset with questions and boolean dilemmas."""
 
     def __init__(self, train: bool = True, data_dir: str = "data/processed") -> None:
         super().__init__()
+
+        self.name: str = "LuckyDataset_train" if train else "LuckyDataset_test"
         self.mode = "train" if train else "test"
         self.data_dir = Path(data_dir)
         self.load_data()
 
     def load_data(self) -> None:
-        """Load questions (strings) and targets (bool) from disk."""
-
-        self.questions, self.target = [], []
+        """Load all matching parquet files into a DataFrame."""
 
         if not self.data_dir.exists():
             raise FileNotFoundError(f"Data directory not found: {self.data_dir.absolute()}")
 
+        dfs = []
         for f in os.listdir(self.data_dir):
             if self.mode not in f:
                 continue
             df = pd.read_parquet(self.data_dir / f)
-            self.questions.extend(df["input"].astype(str).tolist())
-            self.target.extend(df["label"].astype(bool).tolist())
+            # Extract name from filename (e.g., "boolq_train.parquet" -> "boolq_train")
+            subset_name = f.replace(".parquet", "")
+            df["subset"] = subset_name
+            dfs.append(df)
+
+        if not dfs:
+            raise ValueError(f"No data files found for mode '{self.mode}' in {self.data_dir}")
+
+        self.df = pd.concat(dfs, ignore_index=True)
 
     def __getitem__(self, idx: int) -> tuple[str, bool]:
         """Return question (string) and target (bool)."""
-        question = self.questions[idx]
-        target = self.target[idx]
-        return question, target
+        row = self.df.iloc[idx]
+        return str(row["input"]), bool(row["label"])
 
     def __len__(self) -> int:
         """Return the number of questions in the dataset."""
-        return len(self.questions)
+        return len(self.df)
 
 
 class LuckyDataModule(pl.LightningDataModule):
@@ -209,8 +214,55 @@ def dataset_statistics():
     """Compute dataset statistics."""
     train_dataset = LuckyDataset(train=True)
     test_dataset = LuckyDataset(train=False)
-    print(f"Train dataset: {train_dataset.name}")
-    print(f"Number of questions: {len(train_dataset)}")
-    print("\n")
-    print(f"Test dataset: {test_dataset.name}")
-    print(f"Number of questions: {len(test_dataset)}")
+
+    for dataset in [train_dataset, test_dataset]:
+        print(f"### {dataset.name}")
+        print(f"**Total questions:** {len(dataset):,}")
+        print()
+
+        # Create summary table
+        print("| Subset | Count | Percentage |")
+        print("|--------|-------|------------|")
+
+        subset_counts = dataset.df["subset"].value_counts().sort_index()
+        total = len(dataset)
+
+        for subset, count in subset_counts.items():
+            percentage = (count / total) * 100
+            print(f"| {subset} | {count:,} | {percentage:.1f}% |")
+
+        print()
+
+        # Show label distribution
+        label_counts = dataset.df["label"].value_counts()
+        true_count = label_counts.get(True, 0)
+        false_count = label_counts.get(False, 0)
+        print(
+            f"**Label distribution:** True: {true_count:,} ({true_count/total*100:.1f}%) | False: {false_count:,} ({false_count/total*100:.1f}%)"
+        )
+        print()
+
+        # Show examples from each subset
+        print("**Sample questions:**")
+        print()
+        for subset in dataset.df["subset"].unique():
+            subset_df = dataset.df[dataset.df["subset"] == subset]
+            sample_size = min(3, len(subset_df))
+            samples = subset_df.sample(sample_size) if len(subset_df) > sample_size else subset_df
+
+            print(f"*{subset}:*")
+            for _, row in samples.iterrows():
+                label_emoji = "✅" if row["label"] else "❌"
+                print(
+                    f"- {label_emoji} {row['input'][:100]}..."
+                    if len(row["input"]) > 100
+                    else f"- {label_emoji} {row['input']}"
+                )
+            print()
+
+        print("---")
+        print()
+
+
+if __name__ == "__main__":
+    dataset_statistics()

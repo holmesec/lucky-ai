@@ -47,6 +47,7 @@ jobs:
     - name: Check data statistics
       run: |
         echo "## Dataset Statistics" > report.md
+        echo "Dataset changed. Displaying new data statistics." >> report.md
         uv run check-data-stats >> report.md
 
     - name: Comment on PR with CML
