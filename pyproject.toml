@@ -85,4 +85,4 @@ omit = ["tests/*"]
 
 [project.scripts]
 preprocess = "lucky_ai.data:app"
-check-data-stats = "lucky_ai.data:dataset_statistics"
+check-data-stats = "lucky_ai.dataset:dataset_statistics"

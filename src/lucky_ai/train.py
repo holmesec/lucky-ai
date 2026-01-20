@@ -5,7 +5,7 @@ import pytorch_lightning as pl
 from omegaconf import DictConfig, OmegaConf
 from pytorch_lightning.loggers import WandbLogger
 from lucky_ai.model import LuckyBertModel
-from lucky_ai.data import LuckyDataModule
+from lucky_ai.dataset import LuckyDataModule
 
 load_dotenv()
 
