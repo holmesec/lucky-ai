@@ -19,6 +19,8 @@ def add_user_data(input: str, label: bool):
     with open(RAW_DIR / "user" / "user_data.csv", "a") as file:
         file.write(f"{time},{input},{label}\n")
 
+    print(f"Added user data: {input[:50]}... -> {label}")
+
 
 @preprocess_app.command()
 def preprocess(
