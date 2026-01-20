@@ -103,3 +103,7 @@ outs:
   - relpath: raw/ethics/test/test.txt
     md5: d41d8cd98f00b204e9800998ecf8427e
     size: 0
+    cloud:
+      remote_storage:
+        etag: 0885ce87e4bc9a92031001
+        version_id: '1768924366628613'
