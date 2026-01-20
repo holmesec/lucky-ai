@@ -14,6 +14,8 @@ PROCESSED_DIR = Path("data/processed")
 
 
 class LuckyDataset(Dataset):
+    name: str = "LuckyDataset"
+
     """Dataset with questions and boolean dilemmas."""
 
     def __init__(self, train: bool = True, data_dir: str = "data/processed") -> None:
@@ -201,3 +203,14 @@ def preprocess_justice() -> None:
         df.to_parquet(out_path, index=False)
 
         print(f"Processed {file.name} -> {out_path}")
+
+
+def dataset_statistics():
+    """Compute dataset statistics."""
+    train_dataset = LuckyDataset(train=True)
+    test_dataset = LuckyDataset(train=False)
+    print(f"Train dataset: {train_dataset.name}")
+    print(f"Number of questions: {len(train_dataset)}")
+    print("\n")
+    print(f"Test dataset: {test_dataset.name}")
+    print(f"Number of questions: {len(test_dataset)}")

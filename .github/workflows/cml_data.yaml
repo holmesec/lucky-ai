@@ -1,0 +1,51 @@
+name: DVC Workflow
+
+on:
+  pull_request:
+    branches: [master, main]
+    paths:
+    - '**/*.dvc'
+    - '.dvc/**'
+  push:
+    branches: [master, main, add-data]
+    paths:
+    - '**/*.dvc'
+    - '.dvc/**'
+
+jobs:
+  run_data_checker:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v5
+
+    - name: Setup uv
+      uses: astral-sh/setup-uv@v7
+      with:
+        python-version: 3.12
+        enable-cache: true
+
+    - name: Install dependencies
+      run: |
+        uv sync --dev
+
+    - name: Set up GCP credentials
+      shell: bash
+      run: |
+        printf "%s" "$GCLOUD_SERVICE_KEY" > gcp-key.json
+      env:
+        GCLOUD_SERVICE_KEY: ${{ secrets.GCLOUD_SERVICE_KEY }}
+
+    - name: Set GOOGLE_APPLICATION_CREDENTIALS
+      shell: bash
+      run: |
+        echo "GOOGLE_APPLICATION_CREDENTIALS=$PWD/gcp-key.json" >> $GITHUB_ENV
+
+    - name: Pull data with DVC
+      shell: bash
+      run: |
+        uv run dvc pull --no-run-cache
+
+    - name: Check data statistics
+      run: |
+        check-data-stats
