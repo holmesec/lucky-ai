@@ -2,14 +2,25 @@ from pathlib import Path
 import pandas as pd
 from datasets import load_dataset
 import typer
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 RAW_DIR = Path("data/raw")
 PROCESSED_DIR = Path("data/processed")
 
-app = typer.Typer()
+preprocess_app = typer.Typer()
+add_data_app = typer.Typer()
 
 
-@app.command()
+@add_data_app.command()
+def add_user_data(input: str, label: bool):
+    """Append a new user data entry to the user data file."""
+    time = str(datetime.now(tz=ZoneInfo("Europe/Copenhagen")))
+    with open(RAW_DIR / "user" / "user_data.csv", "a") as file:
+        file.write(f"{time},{input},{label}\n")
+
+
+@preprocess_app.command()
 def preprocess(
     subset: str = "all",
 ) -> None:
@@ -22,6 +33,7 @@ def preprocess(
     - justice       : ETHICS justice dataset
     - strategyqa    : StrategyQA dataset
     - boolq         : Google BoolQ dataset
+    - user          : User generated dataset
     """
 
     print("Preprocessing data...")
@@ -34,6 +46,10 @@ def preprocess(
         preprocess_strategyQA()
     if subset == "all" or subset == "boolq":
         preprocess_boolq()
+    if subset == "all" or subset == "user":
+        preprocess_user()
+
+    print("Preprocessing complete.")
 
 
 def preprocess_boolq() -> None:
@@ -112,3 +128,33 @@ def preprocess_justice() -> None:
         df.to_parquet(out_path, index=False)
 
         print(f"Processed {file.name} -> {out_path}")
+
+
+def preprocess_user() -> None:
+    "Preprocess boolean user data."
+    print("Preprocessing user data...")
+
+    file = RAW_DIR / "user" / "user_data.csv"
+    df = pd.read_csv(file)
+
+    # split data in train test 80/20
+    train_size = int(0.8 * len(df)) + 1
+    train_df = df.iloc[:train_size]
+    out_path = PROCESSED_DIR / "user_train.parquet"
+    train_df = train_df[["label", "input"]]
+    train_df["label"] = train_df["label"].astype(bool)
+
+    train_df.to_parquet(out_path, index=False)
+    print(f"Processed user data -> {out_path}")
+
+    test_df = df.iloc[train_size:]
+    out_path = PROCESSED_DIR / "user_test.parquet"
+    test_df = test_df[["label", "input"]]
+    test_df["label"] = test_df["label"].astype(bool)
+
+    test_df.to_parquet(out_path, index=False)
+    print(f"Processed user data -> {out_path}")
+
+
+if __name__ == "__main__":
+    pass

@@ -30,7 +30,7 @@ class LuckyDataset(Dataset):
             if self.mode not in f:
                 continue
             df = pd.read_parquet(self.data_dir / f)
-            # Extract name from filename (e.g., "boolq_train.parquet" -> "boolq_train")
+
             subset_name = f.replace(".parquet", "")
             df["subset"] = subset_name
             dfs.append(df)
