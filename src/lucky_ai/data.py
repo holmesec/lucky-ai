@@ -173,8 +173,8 @@ def preprocess_commonsense() -> None:
 
     commonsense_dir = RAW_DIR / "ethics" / "commonsense"
 
-    train_path = commonsense_dir / "cm_train.csv"
-    test_path = commonsense_dir / "cm_test.csv"
+    train_path = commonsense_dir / "commonsense_train.csv"
+    test_path = commonsense_dir / "commonsense_test.csv"
 
     for file in [train_path, test_path]:
         df = pd.read_csv(file)
