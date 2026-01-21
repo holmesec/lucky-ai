@@ -84,4 +84,6 @@ line-length = 120
 omit = ["tests/*"]
 
 [project.scripts]
-preprocess = "lucky_ai.data:app"
+preprocess = "lucky_ai.data:preprocess_app"
+add-data = "lucky_ai.data:add_data_app"
+check-data-stats = "lucky_ai.dataset:dataset_statistics"
