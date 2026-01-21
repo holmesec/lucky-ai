@@ -16,20 +16,20 @@ outs:
       remote_storage:
         etag: 08bdcfd3d7f68d92031001
         version_id: '1768493233268669'
-  - relpath: processed/cm_test.parquet
+  - relpath: processed/commonsense_test.parquet
     md5: fa259493011d83cba0cee41697425b0c
     size: 69627
     cloud:
       remote_storage:
-        etag: 08adacc2d7f68d92031001
-        version_id: '1768493232985645'
-  - relpath: processed/cm_train.parquet
+        etag: 08aa8bb4ccd19a92031001
+        version_id: '1768929954170282'
+  - relpath: processed/commonsense_train.parquet
     md5: af68d0f098f16f713cbc46d0f4ddf1c3
     size: 223071
     cloud:
       remote_storage:
-        etag: 08a3fdd1d7f68d92031001
-        version_id: '1768493233241763'
+        etag: 08a0f190ccd19a92031001
+        version_id: '1768929953593504'
   - relpath: processed/justice_test.parquet
     md5: 05443afea8806b497eae21c83163a48e
     size: 102289
@@ -58,27 +58,27 @@ outs:
       remote_storage:
         etag: 08f8a8bdd7f68d92031001
         version_id: '1768493232903288'
-  - relpath: raw/ethics/commonsense/cm_test.csv
+  - relpath: raw/ethics/commonsense/commonsense_test.csv
     md5: f87ab2ac78f69f189d2aa8ae78b53419
     size: 3180898
     cloud:
       remote_storage:
-        etag: 08cff7dcd9f68d92031001
-        version_id: '1768493237615567'
-  - relpath: raw/ethics/commonsense/cm_test_hard.csv
+        etag: 08e495a1cdd19a92031001
+        version_id: '1768929955957476'
+  - relpath: raw/ethics/commonsense/commonsense_test_hard.csv
     md5: ca1ea460d4a8f653ce56aa4404f415e2
     size: 3898031
     cloud:
       remote_storage:
-        etag: 08aaa286d9f68d92031001
-        version_id: '1768493236195626'
-  - relpath: raw/ethics/commonsense/cm_train.csv
+        etag: 08e3a99acdd19a92031001
+        version_id: '1768929955845347'
+  - relpath: raw/ethics/commonsense/commonsense_train.csv
     md5: 70226f63692282c22032a328bc3dfc9c
     size: 14546224
     cloud:
       remote_storage:
-        etag: 088ac8c9dbf68d92031001
-        version_id: '1768493241492490'
+        etag: 08bdc0e9ced19a92031001
+        version_id: '1768929959239741'
   - relpath: raw/ethics/justice/justice_test.csv
     md5: 27fff54e5db2aafc5e79f945f7c1e494
     size: 286706

@@ -1,104 +1,28 @@
 from pathlib import Path
-import os
 import pandas as pd
-import torch
-import pytorch_lightning as pl
-from torch.utils.data import Dataset, DataLoader
-from transformers import BertTokenizerFast
 from datasets import load_dataset
-from typing import Optional
 import typer
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 RAW_DIR = Path("data/raw")
 PROCESSED_DIR = Path("data/processed")
 
-
-class LuckyDataset(Dataset):
-    """Dataset with questions and boolean dilemmas."""
-
-    def __init__(self, train: bool = True, data_dir: str = "data/processed") -> None:
-        super().__init__()
-        self.mode = "train" if train else "test"
-        self.data_dir = Path(data_dir)
-        self.load_data()
-
-    def load_data(self) -> None:
-        """Load questions (strings) and targets (bool) from disk."""
-
-        self.questions, self.target = [], []
-
-        if not self.data_dir.exists():
-            raise FileNotFoundError(f"Data directory not found: {self.data_dir.absolute()}")
-
-        for f in os.listdir(self.data_dir):
-            if self.mode not in f:
-                continue
-            df = pd.read_parquet(self.data_dir / f)
-            self.questions.extend(df["input"].astype(str).tolist())
-            self.target.extend(df["label"].astype(bool).tolist())
-
-    def __getitem__(self, idx: int) -> tuple[str, bool]:
-        """Return question (string) and target (bool)."""
-        question = self.questions[idx]
-        target = self.target[idx]
-        return question, target
-
-    def __len__(self) -> int:
-        """Return the number of questions in the dataset."""
-        return len(self.questions)
+preprocess_app = typer.Typer()
+add_data_app = typer.Typer()
 
 
-class LuckyDataModule(pl.LightningDataModule):
-    """Bridges raw strings to BERT tensors using a fast tokenizer"""
+@add_data_app.command()
+def add_user_data(input: str, label: bool):
+    """Append a new user data entry to the user data file."""
+    time = str(datetime.now(tz=ZoneInfo("Europe/Copenhagen")))
+    with open(RAW_DIR / "user" / "user_data.csv", "a") as file:
+        file.write(f"{time},{input},{label}\n")
 
-    def __init__(
-        self,
-        model_name: str = "bert-base-uncased",
-        batch_size: int = 16,
-        num_workers: int = 0,
-        data_dir: str = "data/processed",
-    ) -> None:
-        super().__init__()
-        self.batch_size = batch_size
-        self.num_workers = num_workers
-        self.tokenizer = BertTokenizerFast.from_pretrained(model_name)
-        self.data_dir = data_dir
-
-    def setup(self, stage: Optional[str] = None) -> None:
-        """Initializes the datasets"""
-        self.train_set = LuckyDataset(train=True, data_dir=self.data_dir)
-        self.test_set = LuckyDataset(train=False, data_dir=self.data_dir)
-
-    def collate_fn(self, batch: list[tuple[str, bool]]) -> dict[str, torch.Tensor]:
-        """Tokenizes text and converts labels to tensors for the model"""
-        texts = [item[0] for item in batch]
-        labels = [item[1] for item in batch]
-
-        encodings = self.tokenizer(texts, return_tensors="pt", padding=True, truncation=True, max_length=128)
-
-        return {
-            "input_ids": encodings["input_ids"],
-            "attention_mask": encodings["attention_mask"],
-            "labels": torch.tensor(labels).long(),
-        }
-
-    def train_dataloader(self) -> DataLoader:
-        return DataLoader(
-            self.train_set,
-            batch_size=self.batch_size,
-            collate_fn=self.collate_fn,
-            shuffle=True,
-            num_workers=self.num_workers,
-        )
-
-    def val_dataloader(self) -> DataLoader:
-        return DataLoader(self.test_set, batch_size=self.batch_size, collate_fn=self.collate_fn, num_workers=0)
+    print(f"Added user data: {input[:50]}... -> {label}")
 
 
-app = typer.Typer()
-
-
-@app.command()
+@preprocess_app.command()
 def preprocess(
     subset: str = "all",
 ) -> None:
@@ -111,6 +35,7 @@ def preprocess(
     - justice       : ETHICS justice dataset
     - strategyqa    : StrategyQA dataset
     - boolq         : Google BoolQ dataset
+    - user          : User generated dataset
     """
 
     print("Preprocessing data...")
@@ -123,6 +48,10 @@ def preprocess(
         preprocess_strategyQA()
     if subset == "all" or subset == "boolq":
         preprocess_boolq()
+    if subset == "all" or subset == "user":
+        preprocess_user()
+
+    print("Preprocessing complete.")
 
 
 def preprocess_boolq() -> None:
@@ -166,8 +95,8 @@ def preprocess_commonsense() -> None:
 
     commonsense_dir = RAW_DIR / "ethics" / "commonsense"
 
-    train_path = commonsense_dir / "cm_train.csv"
-    test_path = commonsense_dir / "cm_test.csv"
+    train_path = commonsense_dir / "commonsense_train.csv"
+    test_path = commonsense_dir / "commonsense_test.csv"
 
     for file in [train_path, test_path]:
         df = pd.read_csv(file)
@@ -201,3 +130,33 @@ def preprocess_justice() -> None:
         df.to_parquet(out_path, index=False)
 
         print(f"Processed {file.name} -> {out_path}")
+
+
+def preprocess_user() -> None:
+    "Preprocess boolean user data."
+    print("Preprocessing user data...")
+
+    file = RAW_DIR / "user" / "user_data.csv"
+    df = pd.read_csv(file)
+
+    # split data in train test 80/20
+    train_size = int(0.8 * len(df)) + 1
+    train_df = df.iloc[:train_size]
+    out_path = PROCESSED_DIR / "user_train.parquet"
+    train_df = train_df[["label", "input"]]
+    train_df["label"] = train_df["label"].astype(bool)
+
+    train_df.to_parquet(out_path, index=False)
+    print(f"Processed user data -> {out_path}")
+
+    test_df = df.iloc[train_size:]
+    out_path = PROCESSED_DIR / "user_test.parquet"
+    test_df = test_df[["label", "input"]]
+    test_df["label"] = test_df["label"].astype(bool)
+
+    test_df.to_parquet(out_path, index=False)
+    print(f"Processed user data -> {out_path}")
+
+
+if __name__ == "__main__":
+    pass
