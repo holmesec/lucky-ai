@@ -1,8 +1,6 @@
-import os
 from contextlib import asynccontextmanager
 
 import torch
-import wandb
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
@@ -17,17 +15,10 @@ load_dotenv()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global model, tokenizer, tokenize, softmax
-    wandb_api = wandb.Api(
-        api_key=os.getenv("WANDB_API_KEY"),
-        overrides={"entity": os.getenv("WANDB_ENTITY"), "project": os.getenv("WANDB_PROJECT")},
-    )
-    artifact_name = "lucky_ai/lucky-ai/lucky_bert:latest"
-    artifact = wandb_api.artifact(name=artifact_name)
-    path = artifact.download()
-    model = LuckyBertModel.load_from_checkpoint(f"{path}/model.ckpt")
+    model = LuckyBertModel.load_from_checkpoint("/app/model/model.ckpt")
     model.eval()
 
-    tokenizer = BertTokenizerFast.from_pretrained("bert-base-uncased")
+    tokenizer = BertTokenizerFast.from_pretrained("/app/tokenizer")
 
     softmax = Softmax(dim=1)
 
