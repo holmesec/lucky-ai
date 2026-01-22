@@ -5,7 +5,7 @@ workerPoolSpecs:
     acceleratorCount: 1
   replicaCount: 1
   containerSpec:
-    imageUri: europe-west1-docker.pkg.dev/${PROJECT_ID}/lucky-ai-repo/train-image:${IMAGE_TAG}
+    imageUri: "europe-west1-docker.pkg.dev/${PROJECT_ID}/lucky-ai-repo/train-image:${TRAIN_IMAGE_TAG}"
     command: ["python", "src/lucky_ai/train.py"]
     args:
       - "data.batch_size=${BATCH_SIZE}"
@@ -17,4 +17,4 @@ workerPoolSpecs:
       - name: WANDB_API_KEY
         value: "${WANDB_API_KEY}"
       - name: MODEL_ALIAS
-        value: "sha-${IMAGE_TAG}"
+        value: "${MODEL_ALIAS}"
