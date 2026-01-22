@@ -1,0 +1,74 @@
+name: Data Update
+
+on:
+  schedule:
+    # Run every Monday at 00:00 UTC
+    - cron: '0 0 * * 1'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  update-data:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          python-version: 3.12
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Set up GCP credentials
+        shell: bash
+        run: |
+          printf "%s" "$GCLOUD_SERVICE_KEY" > gcp-key.json
+        env:
+          GCLOUD_SERVICE_KEY: ${{ secrets.GCLOUD_SERVICE_KEY }}
+
+      - name: Set GOOGLE_APPLICATION_CREDENTIALS
+        shell: bash
+        run: |
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$PWD/gcp-key.json" >> $GITHUB_ENV
+
+      - name: Pull latest DVC data
+        shell: bash
+        run: uv run dvc pull
+
+      - name: Run preprocessing
+        shell: bash
+        run: uv run preprocess
+
+      - name: Add data to DVC
+        shell: bash
+        run: uv run dvc add data
+
+      - name: Push to DVC
+        shell: bash
+        run: uv run dvc push
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "Routine data update"
+          title: "Data Update - ${{ github.run_number }}"
+          body: |
+            Automated data update
+
+            - Preprocessed data from database
+            - Updated DVC tracking
+            - Pushed to DVC remote
+
+            Triggered by scheduled workflow on ${{ github.event.schedule }}
+          branch: data-update-${{ github.run_number }}
+          delete-branch: true
+          labels: |
+            automated
+            data-update
