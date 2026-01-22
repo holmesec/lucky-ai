@@ -41,7 +41,7 @@ jobs:
       - name: Auth to GCP
         uses: google-github-actions/auth@v3
         with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          credentials_json: ${{ secrets.GCLOUD_SERVICE_KEY }}
 
       - name: Set up gcloud
         uses: google-github-actions/setup-gcloud@v3
