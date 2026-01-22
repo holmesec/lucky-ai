@@ -1,0 +1,148 @@
+name: Train + Deploy (manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      max_epochs:
+        description: "Max epochs"
+        required: true
+        default: "1"
+      lr:
+        description: "Learning rate"
+        required: true
+        default: "2e-5"
+      batch_size:
+        description: "Batch size"
+        required: true
+        default: "64"
+
+jobs:
+  train_and_deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      PROJECT_ID: dtumlops-484507
+      REGION: europe-west1
+      AR_REPO: lucky-ai-repo
+
+      TRAIN_IMAGE: train-image
+      API_IMAGE: api-image
+
+      # Change this to your Cloud Run service name
+      CLOUD_RUN_SERVICE: lucky-ai-api
+
+      # W&B (entity/project are NOT secrets)
+      WANDB_ENTITY: lucky_ai
+      WANDB_PROJECT: lucky-ai
+
+      # Data path for Vertex (you already use this)
+      DATA_PATH: /gcs/lucky_ai/data/processed
+      NUM_WORKERS: "4"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Auth to GCP
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCLOUD_SERVICE_KEY }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v3
+
+      # -------- Build training image (Cloud Build) --------
+      - name: Build training image in Cloud Build (tag = short sha)
+        run: |
+          TAG="${GITHUB_SHA::7}"
+          echo "Training image tag: ${TAG}"
+          gcloud builds submit . \
+            --project "${PROJECT_ID}" \
+            --config cloudbuild.yaml \
+            --substitutions=_TAG="${TAG}"
+
+      # -------- Render Vertex job config and submit training job --------
+      - name: Render Vertex job config (envsubst)
+        run: |
+          sudo apt-get update && sudo apt-get install -y gettext-base
+          export PROJECT_ID="${PROJECT_ID}"
+          export IMAGE_TAG="${GITHUB_SHA::7}"
+          export WANDB_API_KEY="${{ secrets.WANDB_API_KEY }}"
+          export MAX_EPOCHS="${{ inputs.max_epochs }}"
+          export LR="${{ inputs.lr }}"
+          export BATCH_SIZE="${{ inputs.batch_size }}"
+          export NUM_WORKERS="${NUM_WORKERS}"
+          export DATA_PATH="${DATA_PATH}"
+          envsubst < custom_job_TEMPLATE.yaml > custom_job.yaml
+
+      - name: Submit Vertex Custom Job
+        id: submit
+        run: |
+          JOB_NAME="lucky-ai-train-${GITHUB_SHA::7}"
+          JOB_ID=$(gcloud ai custom-jobs create \
+            --project "${PROJECT_ID}" \
+            --region "${REGION}" \
+            --display-name "${JOB_NAME}" \
+            --config custom_job.yaml \
+            --format="value(name)")
+          echo "job_id=${JOB_ID}" >> $GITHUB_OUTPUT
+          echo "Submitted job: ${JOB_ID}"
+
+      # -------- Poll until training finishes --------
+      - name: Wait for Vertex training to finish
+        run: |
+          JOB_ID="${{ steps.submit.outputs.job_id }}"
+          echo "Polling: ${JOB_ID}"
+          for i in $(seq 1 180); do
+            STATE=$(gcloud ai custom-jobs describe "${JOB_ID}" --region "${REGION}" --format="value(state)")
+            echo "State: ${STATE}"
+            if [ "${STATE}" = "JOB_STATE_SUCCEEDED" ]; then
+              echo "Training succeeded."
+              exit 0
+            fi
+            if [ "${STATE}" = "JOB_STATE_FAILED" ] || [ "${STATE}" = "JOB_STATE_CANCELLED" ]; then
+              echo "Training did not succeed."
+              exit 1
+            fi
+            sleep 60
+          done
+          echo "Timed out waiting for training."
+          exit 1
+
+      # -------- Build API image that bakes in THIS run’s model --------
+      - name: Configure Docker auth for Artifact Registry
+        run: gcloud auth configure-docker ${REGION}-docker.pkg.dev --quiet
+
+      - name: Build + push API image (bake trained model)
+        env:
+          WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
+        run: |
+          TAG="${GITHUB_SHA::7}"
+          ARTIFACT="lucky_ai/lucky-ai/lucky_bert:sha-${TAG}"
+          IMAGE="${REGION}-docker.pkg.dev/${PROJECT_ID}/${AR_REPO}/${API_IMAGE}:${TAG}"
+
+          echo "Baking artifact: ${ARTIFACT}"
+          export DOCKER_BUILDKIT=1
+
+          docker build \
+            -f dockerfiles/api.dockerfile \
+            --build-arg WANDB_ARTIFACT="${ARTIFACT}" \
+            --secret id=WANDB_API_KEY,env=WANDB_API_KEY \
+            --secret id=WANDB_ENTITY,env=WANDB_ENTITY \
+            --secret id=WANDB_PROJECT,env=WANDB_PROJECT \
+            -t "${IMAGE}" \
+            .
+
+          docker push "${IMAGE}"
+          echo "Pushed API image: ${IMAGE}"
+
+      # -------- Deploy to Cloud Run --------
+      - name: Deploy API to Cloud Run
+        run: |
+          TAG="${GITHUB_SHA::7}"
+          IMAGE="${REGION}-docker.pkg.dev/${PROJECT_ID}/${AR_REPO}/${API_IMAGE}:${TAG}"
+
+          gcloud run deploy "${CLOUD_RUN_SERVICE}" \
+            --image "${IMAGE}" \
+            --region "${REGION}" \
+            --platform managed \
+            --allow-unauthenticated

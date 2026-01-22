@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM python:3.12-slim
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
@@ -22,6 +22,10 @@ COPY src/lucky_ai/model.py ./lucky_ai/
 COPY src/lucky_ai/download_model.py ./lucky_ai/
 
 ENV PATH="/app/.venv/bin:$PATH"
+
+ARG WANDB_ARTIFACT="lucky_ai/lucky-ai/lucky_bert:latest"
+ENV WANDB_ARTIFACT=${WANDB_ARTIFACT}
+
 
 RUN --mount=type=secret,id=WANDB_API_KEY,env=WANDB_API_KEY \
     --mount=type=secret,id=WANDB_ENTITY,env=WANDB_ENTITY \

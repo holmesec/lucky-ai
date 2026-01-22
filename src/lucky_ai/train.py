@@ -9,6 +9,7 @@ from lucky_ai.dataset import LuckyDataModule
 from pathlib import Path
 import tempfile
 import wandb
+import os
 
 load_dotenv()
 
@@ -77,9 +78,15 @@ def train(cfg: DictConfig) -> None:
 
             artifact.add_file(str(ckpt_path))
 
+
+            aliases = ["latest"]
+            model_alias = os.getenv("MODEL_ALIAS")  # e.g. "sha-b6b227d"
+            if model_alias:
+                aliases.append(model_alias)
+
             logger.experiment.log_artifact(
                 artifact,
-                aliases=["latest"],
+                aliases=aliases,
             )
 
 
