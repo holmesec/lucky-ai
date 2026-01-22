@@ -5,12 +5,18 @@ workerPoolSpecs:
     acceleratorCount: 1
   replicaCount: 1
   containerSpec:
-    imageUri: europe-west1-docker.pkg.dev/dtumlops-484507/lucky-ai-repo/train-image:<YOUR_IMAGE_TAG>
+    imageUri: europe-west1-docker.pkg.dev/${PROJECT_ID}/lucky-ai-repo/train-image:${IMAGE_TAG}
+
+    # IMPORTANT: define the command so args are treated as Hydra overrides
     command: ["python", "src/lucky_ai/train.py"]
+
+    # Hydra overrides
     args:
-      - "training.max_epochs=1"
-      - "data.num_workers=4"
-      - "data.path=/gcs/lucky_ai/data/processed"
+      - "training.max_epochs=${MAX_EPOCHS}"
+      - "data.num_workers=${NUM_WORKERS}"
+      - "data.path=${DATA_PATH}"
+
+    # Inject secrets at runtime (DO NOT hardcode real values in git)
     env:
       - name: WANDB_API_KEY
-        value: "YOUR_WANDB_API_KEY_HERE"
+        value: "${WANDB_API_KEY}"
