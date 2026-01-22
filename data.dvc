@@ -44,6 +44,13 @@ outs:
       remote_storage:
         etag: 08b88ccad8f68d92031001
         version_id: '1768493235209784'
+  - relpath: processed/new_user_train.parquet
+    md5: 366cc47858c286f42dad1f06b179b3ab
+    size: 1731
+    cloud:
+      remote_storage:
+        etag: 08cbd3c8cc81a092031001
+        version_id: '1769114638100939'
   - relpath: processed/strategyqa_test.parquet
     md5: 02f986a96b0a1c283025ed4b26175335
     size: 31658
@@ -59,19 +66,19 @@ outs:
         etag: 08f8a8bdd7f68d92031001
         version_id: '1768493232903288'
   - relpath: processed/user_test.parquet
-    md5: 9663f5a51d0ffa429231020f674a3a5d
-    size: 1572
+    md5: 4921ddf406ed4a56f465002fea86e1ac
+    size: 1394
     cloud:
       remote_storage:
-        etag: 0884eb8981f39f92031001
-        version_id: '1769110721688964'
+        etag: 088391e4cc81a092031001
+        version_id: '1769114638551171'
   - relpath: processed/user_train.parquet
-    md5: e5c24b3d128d8fad20d4e9771d16dcfb
-    size: 1616
+    md5: 7c7dd5a61f0f5a1f4c433b7c7bf20c2e
+    size: 1632
     cloud:
       remote_storage:
-        etag: 088bd6fc80f39f92031001
-        version_id: '1769110721473291'
+        etag: 0899e9b8cc81a092031001
+        version_id: '1769114637841561'
   - relpath: raw/ethics/commonsense/commonsense_test.csv
     md5: f87ab2ac78f69f189d2aa8ae78b53419
     size: 3180898
