@@ -164,7 +164,7 @@ def preprocess_user() -> None:
     # Process old data with 80/20 split if it exists
     if not old_data.empty:
         old_data = old_data.sample(frac=1, random_state=42).reset_index(drop=True)  # Shuffle
-        split_idx = int(len(old_data) * 0.8)
+        split_idx = max(1, int(len(old_data) * 0.8))
 
         train_df = old_data.iloc[:split_idx][["input", "label"]]
         test_df = old_data.iloc[split_idx:][["input", "label"]]
