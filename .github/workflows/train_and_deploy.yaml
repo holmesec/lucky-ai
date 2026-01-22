@@ -16,6 +16,15 @@ on:
         required: true
         default: "64"
 
+      rebuild_train_image:
+        description: "Rebuild training image?"
+        required: true
+        default: "false"
+      train_image_tag:
+        description: "Training image tag to use when not rebuilding (e.g. stable)"
+        required: true
+        default: "stable"
+
 jobs:
   train_and_deploy:
     runs-on: ubuntu-latest
@@ -28,14 +37,11 @@ jobs:
       TRAIN_IMAGE: train-image
       API_IMAGE: api-image
 
-      # Change this to your Cloud Run service name
       CLOUD_RUN_SERVICE: lucky-ai-api
 
-      # W&B (entity/project are NOT secrets)
       WANDB_ENTITY: lucky_ai
       WANDB_PROJECT: lucky-ai
 
-      # Data path for Vertex (you already use this)
       DATA_PATH: /gcs/lucky_ai/data/processed
       NUM_WORKERS: "4"
 
@@ -45,16 +51,32 @@ jobs:
       - name: Auth to GCP
         uses: google-github-actions/auth@v3
         with:
-          credentials_json: ${{ secrets.GCLOUD_SERVICE_KEY }}
+          credentials_json: ${{ secrets.GCLOUD_SERVICE_KEY_MLOPS }}
 
       - name: Set up gcloud
         uses: google-github-actions/setup-gcloud@v3
 
-      # -------- Build training image (Cloud Build) --------
-      - name: Build training image in Cloud Build (tag = short sha)
+      # Decide tags for this run
+      - name: Set run variables
+        id: vars
         run: |
-          TAG="${GITHUB_SHA::7}"
-          echo "Training image tag: ${TAG}"
+          RUN_TAG="${GITHUB_SHA::7}"
+          echo "run_tag=${RUN_TAG}" >> $GITHUB_OUTPUT
+
+          if [ "${{ inputs.rebuild_train_image }}" = "true" ]; then
+            echo "train_image_tag=${RUN_TAG}" >> $GITHUB_OUTPUT
+          else
+            echo "train_image_tag=${{ inputs.train_image_tag }}" >> $GITHUB_OUTPUT
+          fi
+
+          echo "model_alias=sha-${RUN_TAG}" >> $GITHUB_OUTPUT
+
+      # -------- Build training image (optional) --------
+      - name: Build training image in Cloud Build (optional)
+        if: ${{ inputs.rebuild_train_image == 'true' }}
+        run: |
+          TAG="${{ steps.vars.outputs.run_tag }}"
+          echo "Building training image tag: ${TAG}"
           gcloud builds submit . \
             --project "${PROJECT_ID}" \
             --config cloudbuild.yaml \
@@ -65,19 +87,20 @@ jobs:
         run: |
           sudo apt-get update && sudo apt-get install -y gettext-base
           export PROJECT_ID="${PROJECT_ID}"
-          export IMAGE_TAG="${GITHUB_SHA::7}"
+          export TRAIN_IMAGE_TAG="${{ steps.vars.outputs.train_image_tag }}"
           export WANDB_API_KEY="${{ secrets.WANDB_API_KEY }}"
           export MAX_EPOCHS="${{ inputs.max_epochs }}"
           export LR="${{ inputs.lr }}"
           export BATCH_SIZE="${{ inputs.batch_size }}"
           export NUM_WORKERS="${NUM_WORKERS}"
           export DATA_PATH="${DATA_PATH}"
+          export MODEL_ALIAS="${{ steps.vars.outputs.model_alias }}"
           envsubst < custom_job_TEMPLATE.yaml > custom_job.yaml
 
       - name: Submit Vertex Custom Job
         id: submit
         run: |
-          JOB_NAME="lucky-ai-train-${GITHUB_SHA::7}"
+          JOB_NAME="lucky-ai-train-${{ steps.vars.outputs.run_tag }}"
           JOB_ID=$(gcloud ai custom-jobs create \
             --project "${PROJECT_ID}" \
             --region "${REGION}" \
@@ -115,10 +138,12 @@ jobs:
       - name: Build + push API image (bake trained model)
         env:
           WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
+          WANDB_ENTITY: ${{ env.WANDB_ENTITY }}
+          WANDB_PROJECT: ${{ env.WANDB_PROJECT }}
         run: |
-          TAG="${GITHUB_SHA::7}"
-          ARTIFACT="lucky_ai/lucky-ai/lucky_bert:sha-${TAG}"
-          IMAGE="${REGION}-docker.pkg.dev/${PROJECT_ID}/${AR_REPO}/${API_IMAGE}:${TAG}"
+          RUN_TAG="${{ steps.vars.outputs.run_tag }}"
+          ARTIFACT="lucky_ai/lucky-ai/lucky_bert:${{ steps.vars.outputs.model_alias }}"
+          IMAGE="${REGION}-docker.pkg.dev/${PROJECT_ID}/${AR_REPO}/${API_IMAGE}:${RUN_TAG}"
 
           echo "Baking artifact: ${ARTIFACT}"
           export DOCKER_BUILDKIT=1
@@ -138,8 +163,8 @@ jobs:
       # -------- Deploy to Cloud Run --------
       - name: Deploy API to Cloud Run
         run: |
-          TAG="${GITHUB_SHA::7}"
-          IMAGE="${REGION}-docker.pkg.dev/${PROJECT_ID}/${AR_REPO}/${API_IMAGE}:${TAG}"
+          RUN_TAG="${{ steps.vars.outputs.run_tag }}"
+          IMAGE="${REGION}-docker.pkg.dev/${PROJECT_ID}/${AR_REPO}/${API_IMAGE}:${RUN_TAG}"
 
           gcloud run deploy "${CLOUD_RUN_SERVICE}" \
             --image "${IMAGE}" \
