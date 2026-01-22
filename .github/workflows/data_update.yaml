@@ -6,6 +6,10 @@ on:
     - cron: '0 0 * * 1'
   workflow_dispatch: # Allow manual trigger
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   update-data:
     runs-on: ubuntu-latest
@@ -69,6 +73,9 @@ jobs:
             Triggered by scheduled workflow on ${{ github.event.schedule }}
           branch: data-update-${{ github.run_number }}
           delete-branch: true
+          add-paths: |
+            data.dvc
+            .dvc/
           labels: |
             automated
             data-update
