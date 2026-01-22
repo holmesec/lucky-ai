@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 from torch.nn import Softmax
 from transformers import BertTokenizerFast
+from fastapi.middleware.cors import CORSMiddleware
 
 from lucky_ai.model import LuckyBertModel
 
@@ -35,6 +36,13 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all for testing
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/", include_in_schema=False)
 async def docs_redirect():
