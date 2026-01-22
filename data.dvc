@@ -58,6 +58,20 @@ outs:
       remote_storage:
         etag: 08f8a8bdd7f68d92031001
         version_id: '1768493232903288'
+  - relpath: processed/user_test.parquet
+    md5: 9663f5a51d0ffa429231020f674a3a5d
+    size: 1572
+    cloud:
+      remote_storage:
+        etag: 0884eb8981f39f92031001
+        version_id: '1769110721688964'
+  - relpath: processed/user_train.parquet
+    md5: e5c24b3d128d8fad20d4e9771d16dcfb
+    size: 1616
+    cloud:
+      remote_storage:
+        etag: 088bd6fc80f39f92031001
+        version_id: '1769110721473291'
   - relpath: raw/ethics/commonsense/commonsense_test.csv
     md5: f87ab2ac78f69f189d2aa8ae78b53419
     size: 3180898
