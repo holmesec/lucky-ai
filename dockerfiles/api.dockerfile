@@ -1,0 +1,32 @@
+FROM python:3.11-slim
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
+
+WORKDIR /app
+
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      build-essential \
+      git \
+      ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY .python-version pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev --no-install-project
+
+COPY src/lucky_ai/__init__.py ./lucky_ai/
+COPY src/lucky_ai/api.py ./lucky_ai/
+COPY src/lucky_ai/model.py ./lucky_ai/
+COPY src/lucky_ai/download_model.py ./lucky_ai/
+
+ENV PATH="/app/.venv/bin:$PATH"
+
+RUN --mount=type=secret,id=WANDB_API_KEY,env=WANDB_API_KEY \
+    --mount=type=secret,id=WANDB_ENTITY,env=WANDB_ENTITY \
+    --mount=type=secret,id=WANDB_PROJECT,env=WANDB_PROJECT \
+    python ./lucky_ai/download_model.py
+
+EXPOSE 8080
+CMD ["uvicorn", "lucky_ai.api:app", "--host", "0.0.0.0", "--port", "8080"]

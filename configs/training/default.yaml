@@ -11,4 +11,4 @@ limit_val_batches: 1.0
 logger:
   project: "lucky-ai"
   enabled: True
-  log_model: "all"
+  log_model: False
