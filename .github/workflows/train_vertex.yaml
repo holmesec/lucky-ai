@@ -1,0 +1,70 @@
+name: Train on Vertex (manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      max_epochs:
+        description: "Max epochs"
+        required: true
+        default: "3"
+      num_workers:
+        description: "Dataloader workers"
+        required: true
+        default: "4"
+      data_path:
+        description: "GCSFuse path to processed data"
+        required: true
+        default: "/gcs/lucky_ai/data/processed"
+
+jobs:
+  build_and_train:
+    runs-on: ubuntu-latest
+
+    env:
+      PROJECT_ID: dtumlops-484507
+      REGION: europe-west1
+      IMAGE_REPO: lucky-ai-repo
+      IMAGE_NAME: train-image
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Auth to GCP
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v3
+
+      - name: Build & push image in Cloud Build (tag = short sha)
+        run: |
+          TAG="${GITHUB_SHA::7}"
+          echo "Building image tag: $TAG"
+          gcloud builds submit . \
+            --project "${PROJECT_ID}" \
+            --config cloudbuild.yaml \
+            --substitutions=_TAG="${TAG}"
+
+      - name: Generate Vertex job config from template
+        run: |
+          sudo apt-get update && sudo apt-get install -y gettext-base
+          export PROJECT_ID="${PROJECT_ID}"
+          export IMAGE_TAG="${GITHUB_SHA::7}"
+          export MAX_EPOCHS="${{ inputs.max_epochs }}"
+          export NUM_WORKERS="${{ inputs.num_workers }}"
+          export DATA_PATH="${{ inputs.data_path }}"
+          export WANDB_API_KEY="${{ secrets.WANDB_API_KEY }}"
+          envsubst < custom_job_TEMPLATE.yaml > custom_job.yaml
+
+      - name: Submit Vertex Custom Job (async)
+        run: |
+          JOB_NAME="lucky-ai-train-${GITHUB_SHA::7}"
+          echo "Submitting Vertex job: ${JOB_NAME}"
+          gcloud ai custom-jobs create \
+            --project "${PROJECT_ID}" \
+            --region "${REGION}" \
+            --display-name "${JOB_NAME}" \
+            --config custom_job.yaml
+          echo "Submitted: ${JOB_NAME}"
