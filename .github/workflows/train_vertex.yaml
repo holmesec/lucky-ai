@@ -15,7 +15,15 @@ on:
         description: "GCSFuse path to processed data"
         required: true
         default: "/gcs/lucky_ai/data/processed"
-
+      lr:
+        description: "Learning rate"
+        required: true
+        default: "2e-5"
+      batch_size:
+        description: "Batch size"
+        required: true
+        default: "8"
+    
 jobs:
   build_and_train:
     runs-on: ubuntu-latest
