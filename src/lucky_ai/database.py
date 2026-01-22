@@ -1,4 +1,5 @@
 import psycopg2
+import pandas as pd
 
 DATABASE_URL = (
     "postgresql://postgres.uegxelhdwxryxrvhzhyd:SuWEpHVJ0sDl5rh8@aws-1-eu-west-1.pooler.supabase.com:6543/postgres"
@@ -26,6 +27,23 @@ def insert_user_data(prompt, label):
         conn.close()
 
 
+def fetch_user_data():
+    """Fetch all user data from the database and return as a pandas DataFrame."""
+    conn = get_conn()
+
+    df = pd.read_sql(
+        """
+        SELECT prompt, label, time
+        FROM user_data
+        """,
+        conn,
+    )
+
+    conn.close()
+    return df
+
+
 if __name__ == "__main__":
     # Example usage
-    insert_user_data("Is Lauritz cool?", False)
+    df = fetch_user_data()
+    print(df)
