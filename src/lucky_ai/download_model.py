@@ -13,7 +13,9 @@ wandb_api = wandb.Api(
     },
 )
 
-artifact = wandb_api.artifact("lucky_ai/lucky-ai/lucky_bert:latest")
+artifact_name = os.getenv("WANDB_ARTIFACT", "lucky_ai/lucky-ai/lucky_bert:latest")
+artifact = wandb_api.artifact(artifact_name)
+
 artifact.download(root=MODEL_DIR)
 
 tokenizer = BertTokenizerFast.from_pretrained("bert-base-uncased", cache_dir=TOKENIZER_DIR)

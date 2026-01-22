@@ -1,17 +1,16 @@
 steps:
-  # Build the Docker image with a provided tag (_TAG)
-  - name: 'gcr.io/cloud-builders/docker'
-    args: [
-      'build',
-      '-t', 'europe-west1-docker.pkg.dev/$PROJECT_ID/lucky-ai-repo/train-image:${_TAG}',
-      '-t', 'europe-west1-docker.pkg.dev/$PROJECT_ID/lucky-ai-repo/train-image:latest',
-      '-f', 'dockerfiles/train.dockerfile',
-      '.'
-    ]
+- name: 'gcr.io/cloud-builders/docker'
+  args: [
+    'build',
+    '-t', 'europe-west1-docker.pkg.dev/$PROJECT_ID/lucky-ai-repo/train-image:${_TAG}',
+    '-t', 'europe-west1-docker.pkg.dev/$PROJECT_ID/lucky-ai-repo/train-image:latest',
+    '-f', 'dockerfiles/train.dockerfile',
+    '.'
+  ]
 
 images:
-  - 'europe-west1-docker.pkg.dev/$PROJECT_ID/lucky-ai-repo/train-image:${_TAG}'
-  - 'europe-west1-docker.pkg.dev/$PROJECT_ID/lucky-ai-repo/train-image:latest'
+- 'europe-west1-docker.pkg.dev/$PROJECT_ID/lucky-ai-repo/train-image:${_TAG}'
+- 'europe-west1-docker.pkg.dev/$PROJECT_ID/lucky-ai-repo/train-image:latest'
 
 substitutions:
   _TAG: "dev"
