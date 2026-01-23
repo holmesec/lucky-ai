@@ -1,4 +1,4 @@
-name: Train + Deploy (manual)
+name: Train + Deploy
 
 on:
   workflow_dispatch:
@@ -6,7 +6,7 @@ on:
       max_epochs:
         description: "Max epochs"
         required: true
-        default: "1"
+        default: "5"
       lr:
         description: "Learning rate"
         required: true
@@ -15,7 +15,6 @@ on:
         description: "Batch size"
         required: true
         default: "64"
-
       rebuild_train_image:
         description: "Rebuild training image?"
         required: true
@@ -24,9 +23,24 @@ on:
         description: "Training image tag to use when not rebuilding (e.g. stable)"
         required: true
         default: "stable"
+  pull_request:
+    types: [closed]
+    branches: [master]
 
 jobs:
   train_and_deploy:
+    # Only run if workflow_dispatch or merged PR to master with "data-update" label
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      (
+        github.event_name == 'pull_request' &&
+        github.event.pull_request.merged == true &&
+        contains(
+          join(github.event.pull_request.labels.*.name, ','),
+          'data-update'
+        )
+      )
+
     runs-on: ubuntu-latest
 
     env:
@@ -44,6 +58,12 @@ jobs:
 
       DATA_PATH: /gcs/lucky_ai/data/processed
       NUM_WORKERS: "4"
+
+      MAX_EPOCHS: ${{ inputs.max_epochs || '5' }}
+      LR: ${{ inputs.lr || '2e-5' }}
+      BATCH_SIZE: ${{ inputs.batch_size || '64' }}
+      REBUILD_TRAIN_IMAGE: ${{ inputs.rebuild_train_image || 'false' }}
+      TRAIN_IMAGE_TAG: ${{ inputs.train_image_tag || 'stable' }}
 
     steps:
       - uses: actions/checkout@v4
@@ -63,17 +83,17 @@ jobs:
           RUN_TAG="${GITHUB_SHA::7}"
           echo "run_tag=${RUN_TAG}" >> $GITHUB_OUTPUT
 
-          if [ "${{ inputs.rebuild_train_image }}" = "true" ]; then
+          if [ "${REBUILD_TRAIN_IMAGE}" = "true" ]; then
             echo "train_image_tag=${RUN_TAG}" >> $GITHUB_OUTPUT
           else
-            echo "train_image_tag=${{ inputs.train_image_tag }}" >> $GITHUB_OUTPUT
+            echo "train_image_tag=${TRAIN_IMAGE_TAG}" >> $GITHUB_OUTPUT
           fi
 
           echo "model_alias=sha-${RUN_TAG}" >> $GITHUB_OUTPUT
 
       # -------- Build training image (optional) --------
       - name: Build training image in Cloud Build (optional)
-        if: ${{ inputs.rebuild_train_image == 'true' }}
+        if: env.REBUILD_TRAIN_IMAGE == 'true'
         run: |
           TAG="${{ steps.vars.outputs.run_tag }}"
           echo "Building training image tag: ${TAG}"
@@ -89,9 +109,9 @@ jobs:
           export PROJECT_ID="${PROJECT_ID}"
           export TRAIN_IMAGE_TAG="${{ steps.vars.outputs.train_image_tag }}"
           export WANDB_API_KEY="${{ secrets.WANDB_API_KEY }}"
-          export MAX_EPOCHS="${{ inputs.max_epochs }}"
-          export LR="${{ inputs.lr }}"
-          export BATCH_SIZE="${{ inputs.batch_size }}"
+          export MAX_EPOCHS="${MAX_EPOCHS}"
+          export LR="${LR}"
+          export BATCH_SIZE="${BATCH_SIZE}"
           export NUM_WORKERS="${NUM_WORKERS}"
           export DATA_PATH="${DATA_PATH}"
           export MODEL_ALIAS="${{ steps.vars.outputs.model_alias }}"
@@ -174,6 +194,4 @@ jobs:
             --concurrency 1 \
             --timeout 600 \
             --cpu-boost \
-            --allow-unauthenticated  
-
-            
+            --allow-unauthenticated
