@@ -165,12 +165,13 @@ jobs:
         run: |
           RUN_TAG="${{ steps.vars.outputs.run_tag }}"
           IMAGE="${REGION}-docker.pkg.dev/${PROJECT_ID}/${AR_REPO}/${API_IMAGE}:${RUN_TAG}"
-
           gcloud run deploy "${CLOUD_RUN_SERVICE}" \
             --image "${IMAGE}" \
             --region "${REGION}" \
             --platform managed \
-            --allow-unauthenticated \
-            --memory 4Gi \
             --cpu 2 \
-            --timeout 300
+            --memory 4Gi \
+            --concurrency 1 \
+            --timeout 600 \
+            --cpu-boost \
+            --allow-unauthenticated 
