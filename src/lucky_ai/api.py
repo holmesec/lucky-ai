@@ -49,7 +49,7 @@ async def docs_redirect():
 
 
 @app.post("/ask_model/")
-def read_item(question: str):
+def ask_model(question: str):
     input_ids, attention_mask = tokenize(question)
     out = model(input_ids=input_ids, attention_mask=attention_mask)
     probs = softmax(out).detach().numpy()[0]
