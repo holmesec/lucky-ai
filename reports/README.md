@@ -91,7 +91,7 @@ will check the repositories and the code to verify your answers.
 - [x] Create a FastAPI application that can do inference using your model (M22)
 - [x] Deploy your model in GCP using either Functions or Run as the backend (M23)
 - [ ] Write API tests for your application and setup continues integration for these (M24)
-- [ ] Load test your application (M24)
+- [x] Load test your application (M24)
 - [ ] Create a more specialized ML-deployment API using either ONNX or BentoML, or both (M25)
 - [x] Create a frontend for your API (M26)
 
@@ -110,7 +110,7 @@ will check the repositories and the code to verify your answers.
 
 - [ ] Write some documentation for your application (M32)
 - [ ] Publish the documentation to GitHub Pages (M32)
-- [ ] Revisit your initial project description. Did the project turn out as you wanted?
+- [x] Revisit your initial project description. Did the project turn out as you wanted?
 - [ ] Create an architectural diagram over your MLOps pipeline
 - [x] Make sure all group members have an understanding about all parts of the project
 - [x] Uploaded all your code to GitHub
