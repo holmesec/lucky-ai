@@ -112,8 +112,8 @@ will check the repositories and the code to verify your answers.
 - [ ] Publish the documentation to GitHub Pages (M32)
 - [ ] Revisit your initial project description. Did the project turn out as you wanted?
 - [ ] Create an architectural diagram over your MLOps pipeline
-- [ ] Make sure all group members have an understanding about all parts of the project
-- [ ] Uploaded all your code to GitHub
+- [x] Make sure all group members have an understanding about all parts of the project
+- [x] Uploaded all your code to GitHub
 
 ## Group information
 
@@ -150,13 +150,9 @@ s214635, s214619, s193562
 >
 > Answer:
 
---- question 3 fill here ---
-(
-      eksempler:
-      Supabase/psycopg2 (sql database),
-      huggingface (pretrained modeller og embeddings),
-      noget af det der front-end
-)
+We used the [Hugging Face Transformers](https://huggingface.co/docs/transformers/) library. Specifically, we leveraged the `BertModel.from_pretrained` and `BertTokenizer.from_pretrained` functions to load and fine-tune a pre-trained `bert-base-uncased` model for our ethical classification task. This made it possible and simple to focus on fine-tuning instead of dealing with training a model from the ground.
+
+We also used the [psycopg2](https://pypi.org/project/psycopg2/) adapter to connect our FastAPI service to a remote PostgreSQL database hosted on [Supabase](https://supabase.com/). We implemented a couple of database utility functions to log and store user feedback (prompts and predicted labels). To create a front end we used [Google AI Studio](https://aistudio.google.com/) to create a React app. The frontend communicates with our model via the FastAPI backend.
 
 ## Coding environment
 
@@ -179,12 +175,12 @@ s214635, s214619, s193562
 We used `uv` as our Python package manager for managing dependencies. All dependencies are defined in the `pyproject.toml` file, which includes both production dependencies (like PyTorch, transformers, FastAPI, and Weights & Biases) and development dependencies (like pytest, ruff, and pre-commit). We configured platform-specific PyTorch installations, using CUDA 12.1 for Linux and CPU-only for Windows.
 
 To get an exact copy of our development environment, a new team member would need to:
+
 1. Install `uv` by running `pip install uv`
 2. Clone the repository from GitHub
 3. Navigate to the project directory
 4. Run `uv sync` to install all dependencies with exact versions from the lockfile
-5. Optionally run `uv sync --dev` to also install development dependencies
-6. Pull the data using `dvc pull` to get the versioned datasets
+5. Pull the data using `dvc pull` to get the versioned datasets
 
 This approach ensures reproducible environments across different machines and team members, with automatic resolution of dependency conflicts and platform-specific package variants.
 
@@ -202,7 +198,7 @@ This approach ensures reproducible environments across different machines and te
 >
 > Answer:
 
---- question 5 fill here ---
+We initialized the project using the 'simple' version of the MLOps cookiecutter template. We deviated from the original template in several ways to better suit our project requirements. We removed the `notebooks` folder as all our development was done directly in Python scripts. We introduced a `frontend` directory containing a React application, which communicates with our FastAPI backend. We integrated Data Version Control and thus added a `.dvc` folder. Besides that, a couple of files were added such as configuration files for Google Cloud services, eg. Vertex AI used for fine-tuning and a configuration file for Cloud Build to build docker images.
 
 ### Question 6
 
@@ -217,7 +213,7 @@ This approach ensures reproducible environments across different machines and te
 >
 > Answer:
 
---- question 6 fill here ---
+We enforced code quality and consistency by using `ruff` for both linting and formatting. To automate this process and ensure no non-compliant code reached our repository, we implemented pre-commit hooks that trigger `ruff check` and `ruff format` on every commit. We also aimed for type safety by consistently using Python type hints, such as in our `LuckyBertModel` class and database utility functions. We also used doc strings where it seemed fitting, to provide descriptions of the intended behaviour for methods. These concepts are hihgly important in larger MLOps projects to improve maintainability and seamless collaboration between team members. We could have
 
 ## Version control
 
@@ -236,7 +232,7 @@ This approach ensures reproducible environments across different machines and te
 >
 > Answer:
 
---- question 7 fill here ---
+In total we have implemented 11 tests. The format of our data files are tested to ensure they match the expected format and are not corrupted. The generated dataset and data module are also tested along with the dataloader to ensure everything works as intended and is ready to be used for fine-tuning our model.
 
 ### Question 8
 
@@ -251,7 +247,7 @@ This approach ensures reproducible environments across different machines and te
 >
 > Answer:
 
---- question 8 fill here ---
+For all our source code (excluding the front end), we have a total code covarage of (only) 43%. Even if we had a coverage of 100% we would still not trust our code to be without errors as the coverage does not explain the quaility of the test, only the lines covered. In other words, we could easily have a test that covers a line but not a given scenario. Any untested scenario could lead to unpredicted (edge-)cases leading to errors that were never tested for. With that said, unit testing is still a great tool to minimize errors and helps avoid introducing new code that introduces new bugs.
 
 ### Question 9
 
@@ -266,7 +262,7 @@ This approach ensures reproducible environments across different machines and te
 >
 > Answer:
 
---- question 9 fill here ---
+Yes, we made use of branches and pull requests in our work with our project. Whenever a new task was started by someone - e.g. adding the FastAPI - a branch was made to work on the feature. When (thought of as) completed, a pull request would be created and a review requested before the branch was merged to master and deleted. This way of working was nice as it helped avoid conflicts on code being made and kept the master branch more "clean". It also made it much easier to work "isolated" on multiple features at the same time and avoid issues e.g. if two people were both comitting to the master branch leading to changes interferring with each other.
 
 ### Question 10
 
@@ -281,7 +277,7 @@ This approach ensures reproducible environments across different machines and te
 >
 > Answer:
 
---- question 10 fill here ---
+Yes, we used DVC for managing our data. It improved our project by making version control available of our data which in our case is crucial as we incorperate user-supplied data continously. Being able to "jump" to a specific version of our data will be very important down the line if it turns out that e.g. some user-proivded data is degrading our model performance. We configured a Google Cloud Storage bucket as our remote storage backend, allowing all team members to effortlessly synchronize datasets using `dvc pull`. This setup ensures that our Git repository remains lightweight while maintaining a clear audit trail of data changes.
 
 ### Question 11
 
@@ -298,7 +294,17 @@ This approach ensures reproducible environments across different machines and te
 >
 > Answer:
 
---- question 11 fill here ---
+Our setup is comprehensive, covering testing, data versioning checks, automated data updates, and multi-stage deployment. We use GitHub Actions as our primary CI/CD platform. To ensure cross-platform compatibility, our tests runs on both **Ubuntu** and **Windows**.
+
+We have organized our CI into several specialized workflows:
+
+1.  **[tests.yaml](/.github/workflows/tests.yaml)**: This workflow runs on every push and pull request to the master branch. It pulls the latest versioned data from our GCP bucket via DVC, and executes all tests using `pytest`.
+2.  **[cml_data.yaml](/.github/workflows/cml_data.yaml)**: Triggered by changes to DVC-tracked files, this workflow pulls updated data, calculates dataset statistics, and post a summary report as a comment directly on the pull request.
+3.  **[data_update.yaml](/.github/workflows/data_update.yaml)**: A scheduled workflow (running weekly) that automates the whole data ingestion pipeline. It pulls raw data, runs preprocessing, updates DVC pointers, and automatically opens a pull request with the changes.
+4.  **[train_vertex.yaml](/.github/workflows/train_vertex.yaml)**: A simple workflow for manually fine-tuning our model on Vertex AI
+5.  **[train_and_deploy.yaml](/.github/workflows/train_and_deploy.yaml)**: This is probably our must important workflow. It triggers when an automated data PR is merged to the master branch. It takes care of training our model on Vertex AI and then building and deploying our FastAPI image to Cloud Run.
+6.  **[deploy_frontend.yaml](/.github/workflows/deploy_frontend.yaml)**: Monitors the `frontend/` directory and automatically rebuilds and re-deploys the React application to Cloud Run whenever the UI code is updated.
+7.  **[deploy_latest.yaml](/.github/workflows/deploy_latest.yaml)**: A manual trigger workflow used for deploying the latest verion of our model as an API
 
 ## Running code and tracking experiments
 
@@ -317,7 +323,15 @@ This approach ensures reproducible environments across different machines and te
 >
 > Answer:
 
---- question 12 fill here ---
+We used hydra to configure hyper paramaters for our training as e.g. seen in `train.py`:
+
+```python
+@hydra.main(config_path="../../configs", config_name="config.yaml", version_base="1.1")
+def train(cfg: DictConfig) -> None:
+      ...
+```
+
+We made it so that these values could also be specified as input via the UI when manually dispatching a github action for training the model.
 
 ### Question 13
 
@@ -332,7 +346,7 @@ This approach ensures reproducible environments across different machines and te
 >
 > Answer:
 
---- question 13 fill here ---
+To ensure reproducibility, we used hydra for configuration management so that hyperparameters are explicitly defined in YAML files and versioned alongside our code. For data reproducibility, we used DVC to link our training datasets to specific Git commits, allowing us to pull the exact data state used for any historical run from our GCP bucket experiment tracking and artifact management were handled by Weights & Biases. For every run we automatically log the config file and the resulting model as an artifacts. We also used docker to containerize our training environment on Vertex AI. To reproduce an experiment, a team member can checkout the specific git commit, run `uv sync`, `dvc pull`, and execute the training command using the logged hydra config.
 
 ### Question 14
 
@@ -349,7 +363,8 @@ This approach ensures reproducible environments across different machines and te
 >
 > Answer:
 
---- question 14 fill here ---
+![wb charts](figures/wb_charts.png)
+As seen on the screenshot above, we logged training loss, validation loss, and validation accuracy. In our case we want our LLM model to respond to (label) a statmenet with "yes" or "no". We get an indication of our models ability to generalize when looking at the validation metrics and we can see that it improves over time. In all honesty we did not focus very much on the actual **ML** part of this project as we cared much more about learning about all the things surrounding the model it self, i.e. all the MLOps bits. In a more profesional scenario we would probaly have done more (and more interesting) logging, but we kept it quite minimal here and put our time and effort elsewhere. For W&B specifically, we e.g. spent more time learning how to log model files for later use.
 
 ### Question 15
 
@@ -364,7 +379,7 @@ This approach ensures reproducible environments across different machines and te
 >
 > Answer:
 
---- question 15 fill here ---
+We use 3 different docker images: one for containerizing our training, one for containerizing our API, and one for containerizing our front end. To e.g. run the API doker iamge, you could do `docker run --rm -it -p 8080:8080 api-image`. Although private, our API image can e.g. be found here: http://europe-west1-docker.pkg.dev/dtumlops-484507/lucky-ai-repo/api-image:latest
 
 ### Question 16
 
@@ -379,7 +394,7 @@ This approach ensures reproducible environments across different machines and te
 >
 > Answer:
 
---- question 16 fill here ---
+The apporach for debgging varied across team members. Some relied on print staments and some also used the inline debugger in VS code. Profiling was not done.
 
 ## Working in the cloud
 
@@ -396,7 +411,7 @@ This approach ensures reproducible environments across different machines and te
 >
 > Answer:
 
---- question 17 fill here ---
+We used Bucket, Vertex AI, and Cloud Run. We used Bucket to store our data, i.e. bucket was the remote storage for our DVC set up. We used Vertex AI for fine-tuning our BERT model, and finally we used Cloud Run to deploy our API image and front end image.
 
 ### Question 18
 
@@ -411,7 +426,7 @@ This approach ensures reproducible environments across different machines and te
 >
 > Answer:
 
---- question 18 fill here ---
+We did not use compute engine, instead we used Vertex AI and Cloud run.
 
 ### Question 19
 
@@ -431,7 +446,7 @@ This approach ensures reproducible environments across different machines and te
 >
 > Answer:
 
---- question 20 fill here ---
+![artifacts](figures/registry.png)
 
 ### Question 21
 
@@ -440,7 +455,7 @@ This approach ensures reproducible environments across different machines and te
 >
 > Answer:
 
---- question 21 fill here ---
+![alt text](figures/build.png)
 
 ### Question 22
 
@@ -455,7 +470,7 @@ This approach ensures reproducible environments across different machines and te
 >
 > Answer:
 
---- question 22 fill here ---
+We managed to fine-tune our model in the cloud using Vertex AI. As can also be seen in [/.github/workflows/train_and_deploy.yaml](/.github/workflows/train_and_deploy.yaml) we did so with the command `gcloud ai custom-jobs create --project "${PROJECT_ID}" --region "${REGION}" --display-name "${JOB_NAME}" --config custom_job.yaml --format="value(name)"`. An issue we faced was the we as part of the pipeline needed to wait for training to be done before continuing with the next step (we also asked for input on this in slack but no great solution seems to exist for our scenario with the tools used). We ended up polling for the job status in a loop wating for the status to report it was done.
 
 ## Deployment
 
@@ -472,7 +487,7 @@ This approach ensures reproducible environments across different machines and te
 >
 > Answer:
 
---- question 23 fill here ---
+We created an API using FastAPI and deployed it using google cloud. An (interesting) problem we initally faced was the we ran into a time-out during deployment. The reason for this was that the first iteration of the API downloaded the model file from W&B using the `lifecycle` method supported by the FastAPI framework. This meant that when originally starting up, the +1GB file would be downloaded from W&B which took longer time than Cloud Run was willing to wait for the app to be responsive. To fix this, we ended up instead downloading the model file during build time, such that the model file will be baked into the docker image and loaded locally during start up of the API.
 
 ### Question 24
 
@@ -488,7 +503,7 @@ This approach ensures reproducible environments across different machines and te
 >
 > Answer:
 
---- question 24 fill here ---
+As stated above we deployed our FastAPI app using cloud run. After initally testing the docker image locally we deployed it and it is also now part of our CI flow being automatically buildt and deployed when a new version of our fine-tuned model is created (which happens automatically when new user data is recieved which is something that is automatically checked for once a week). If you want to directly interact with the API instead of using our deployed front end, you could e.g. use the following CURL command to run inference on our fine-tuned model: `curl -X POST https://lucky-ai-api-664189756248.europe-west1.run.app/ask_model/?question=IS%20MLOps%20a%20good%20course?`
 
 ### Question 25
 
@@ -503,7 +518,9 @@ This approach ensures reproducible environments across different machines and te
 >
 > Answer:
 
---- question 25 fill here ---
+We did not do unit testing on the API, but we did do some simple load testing using locust. We created a simple file, [/tests/performancetests/locustfile.py](/tests/performancetests/locustfile.py) that simulates users visiting both the documentation endpoint and more importantly also the endpoint that performance inference on our model.
+![alt text](figures/locust.png)
+As seen on the image above where load testing was performed against our API deployment on Cloud Run, the app was fairly sturdy with no failures and with and average response time for inference of 174 ms. More load testing could be interesting and it could especially be intersting to implement load testing for the functionality of "user feedback" where users can provide data that will be stored in a database.
 
 ### Question 26
 
@@ -518,7 +535,7 @@ This approach ensures reproducible environments across different machines and te
 >
 > Answer:
 
---- question 26 fill here ---
+We did not implement monitoring using Evedently or Prometheus, but out of the box (as also covered in the course) google cloud platform comes with cloud monitoring that we could use to get insight of e.g. how our deployed API is performing. This does however not cover data drifitng, but instead shows metrics such as request count, latency, and up time.
 
 ## Overall discussion of project
 
@@ -537,7 +554,7 @@ This approach ensures reproducible environments across different machines and te
 >
 > Answer:
 
-Lasse: $0.15
+Lasse used $0.15, Andreas used $0.89, and Lauritz used $0.00. Vertex AI was our biggest expense. We enjoyed working in the cloud overall but also found the interface of google cloud console confusing and complex at times. It also felt slightly stressful to know that you are paying for essentially every small action you do. We however all like the automation that comes with using the cloud and especially are fund of how it can be used in a CI/CD workflow. It felt slightly annoying at times that documentation felt difficult to follow espically due to the rapid updates there seems to be made to the different services and how different severices are added while other are slowly being outdated. The overlap of different services were also slighlty confusing.
 
 --- question 27 fill here ---
 
@@ -555,7 +572,7 @@ Lasse: $0.15
 >
 > Answer:
 
---- question 28 fill here ---
+We implemneted a front end for API. The front end was created by using [Google AI Studio](https://aistudio.google.com/) to create a react app. We also used [Supabase](https://supabase.com/) for hosting a PostgreSQL database that we used with our API to store new user provided data that we automatically use for automatic updates and re-training of our LLM model.
 
 ### Question 29
 
@@ -572,7 +589,13 @@ Lasse: $0.15
 >
 > Answer:
 
---- question 29 fill here ---
+![drawio](figures/MLOps.drawio.png)
+
+Our MLOps architecture is designed to be a fully automated loop, connecting local development with scalable cloud infrastructure. The starting point of the system is our local setup, where we use `uv` for dependency management, `Hydra` for configuration, and `DVC` for data versioning. Raw datasets are stored in a Google Cloud Storage Bucket, which serves as our DVC remote.
+
+Whenever we push code to the GitHub repository, it triggers several GitHub Action workflows. For every pull request we run a couple of tests using `pytest`. The core of our automation lies in the "Train + Deploy" pipeline. This workflow orchestrates multiple GCP services. For the training phase, the workflow submits a custom job to Vertex AI. During training, the system logs metrics, hyperparameters, and model checkpoints to Weights & Biases. Once training is complete (managed via our custom polling), the pipeline automatically picks up the latest model artifact and builds and redeploys our FastAPI app using Cloud Run. Our React Frontend is also hosted on Cloud Run and communicates with this API.
+
+Finally, we've implemented a feedback loop: our API is connected to a Supabase (PostgreSQL) database. When users provide feedback on model predictions the data is stored there. A scheduled weekly GitHub Action then pulls this new data from Supabase, runs preprocessing, updates our DVC storage, and triggers a new training and deployment run. This creates a loop where the system continuously improves based on real-world usage.
 
 ### Question 30
 
@@ -586,7 +609,11 @@ Lasse: $0.15
 >
 > Answer:
 
---- question 30 fill here ---
+As students new to MLOps, our biggest struggle was not the machine learning itself, but the "plumbing" required to connect different cloud services into a cohesive and automated pipeline. We spent a significant amount of time overcoming technical issues in our CI/CD workflows and deployment strategy.
+
+An example of a challenge was the Cloud Run deployment timeout. Initially, our FastAPI application used the `lifespan` event to download the ~1GB fine-tuned model file from weights & Biases at startup. This caused the container to exceed Cloud Run's health check timeout and caused deployment failures. We overcame this by changing our Docker build process to "bake" the model artifact directly into the image during the build stage using a downloader script.
+
+Another hurdle was orchestrating Vertex AI within GitHub Actions. We wanted a fully automated Train + Deploy pipeline, but `gcloud ai custom-jobs create` is asynchronous. There was no straightforward fix to wait for the training to finish and then retrieve the fine-tuned model artifact before proceeding to the deployment step. To solve this we ended up implementing a bash polling loop in our GitHub Action that periodically checks the job status via the GCP API and then only proceeding when the training reaches a succeeded state.
 
 ### Question 31
 
@@ -604,14 +631,4 @@ Lasse: $0.15
 > _We have used ChatGPT to help debug our code. Additionally, we used GitHub Copilot to help write some of our code._
 > Answer:
 
-fewafewubaofewnafioewnifowf ewafw afew afewafewafionewoanf waf ewonfieownaf fewnaiof newio fweanøf wea fewa
-fweafewa fewiagonwa ognwra'g
-wa
-gwreapig ipweroang w rag
-wa grwa
-g
-ew
-gwea g
-ew ag ioreabnguorwa bg̈́aw
-wa
-gew4igioera giroeahgi0wra gwa
+Overall there was a big overlap in contributions and generally everyone was involved by providing input, feedback, and suggestions to the work done. s193562 was in charche of setting up DVC and using google buckets as well as setting up the PostgreSQL database. s214635 was in charce of setting up the training on Vertex AI and creating the front end. s214619 was in charge of creating the API
