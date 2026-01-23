@@ -32,5 +32,4 @@ RUN --mount=type=secret,id=WANDB_API_KEY,env=WANDB_API_KEY \
     --mount=type=secret,id=WANDB_PROJECT,env=WANDB_PROJECT \
     python ./lucky_ai/download_model.py
 
-EXPOSE 8080
-CMD ["uvicorn", "lucky_ai.api:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD exec uvicorn lucky_ai.api:app --host 0.0.0.0 --port $PORT
