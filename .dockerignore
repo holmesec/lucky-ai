@@ -17,3 +17,8 @@
 # Build outputs
 outputs/
 models/
+
+# Frontend
+**/node_modules/
+frontend/dist/
+frontend/.env.local

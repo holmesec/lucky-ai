@@ -1,0 +1,1 @@
+// Moved to root vite-env.d.ts

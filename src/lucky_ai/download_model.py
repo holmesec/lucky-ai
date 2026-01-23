@@ -1,6 +1,6 @@
 import os
 import wandb
-from transformers import BertTokenizerFast
+from transformers import BertTokenizerFast, BertModel
 
 MODEL_DIR = "/app/model"
 TOKENIZER_DIR = "/app/tokenizer"
@@ -17,6 +17,7 @@ artifact_name = os.getenv("WANDB_ARTIFACT", "lucky_ai/lucky-ai/lucky_bert:latest
 artifact = wandb_api.artifact(artifact_name)
 
 artifact.download(root=MODEL_DIR)
+BertModel.from_pretrained("bert-base-uncased")
 
 tokenizer = BertTokenizerFast.from_pretrained("bert-base-uncased", cache_dir=TOKENIZER_DIR)
 
