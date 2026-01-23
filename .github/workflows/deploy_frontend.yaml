@@ -1,0 +1,47 @@
+name: Deploy Frontend
+
+on:
+  workflow_dispatch: # Manual trigger
+  push:
+    branches: [ main ]
+    paths: [ 'frontend/**' ] # Only trigger if frontend code changes
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    # Define the Project ID here so you don't have to make it a secret
+    env:
+      PROJECT_ID: dtumlops-484507 
+      REGION: europe-west1
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Auth to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCLOUD_SERVICE_KEY_MLOPS }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Build and Push to Artifact Registry
+        run: |
+          gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+          
+          # Build passing the BACKEND URL as a build argument
+          docker build \
+            --build-arg VITE_API_BASE_URL="https://lucky-ai-api-664189756248.europe-west1.run.app" \
+            -t ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/lucky-ai-repo/frontend:latest \
+            -f dockerfiles/frontend.dockerfile .
+            
+          docker push ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/lucky-ai-repo/frontend:latest
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy lucky-ai-frontend \
+            --image ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/lucky-ai-repo/frontend:latest \
+            --region ${{ env.REGION }} \
+            --platform managed \
+            --allow-unauthenticated \
+            --port 8080

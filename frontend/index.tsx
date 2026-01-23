@@ -4,12 +4,9 @@ import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import { ThemeProvider } from './themes/ThemeProvider.tsx';
 
-console.log("Oracle v3.0: Module script execution started.");
-
 const mount = () => {
-  console.log("Oracle v3.0: Attempting to mount React application...");
   const container = document.getElementById('root');
-  
+
   if (!container) {
     console.error("Oracle v3.0 Error: Target container #root was not found in the document.");
     return;
@@ -24,7 +21,6 @@ const mount = () => {
         </ThemeProvider>
       </React.StrictMode>
     );
-    console.log("Oracle v3.0: Render command issued successfully.");
   } catch (err) {
     console.error("Oracle v3.0: Fatal render exception:", err);
     container.innerHTML = `

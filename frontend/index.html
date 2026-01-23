@@ -1,90 +1,38 @@
-
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Yes/No Oracle</title>
-    
-    <script>
-      window.process = { env: { NODE_ENV: 'development' } };
-      window.global = window;
 
-      window.onerror = function(msg, url, line, col, error) {
-        console.error("Critical Oracle Boot Error:", msg, error);
-        const root = document.getElementById('root');
-        if (root) {
-          root.innerHTML = `<div style="background:#020617;color:#f87171;padding:40px;font-family:monospace;height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;"><h1>CRYSTAL BALL FRACTURED</h1><pre>${msg}</pre></div>`;
-        }
-      };
-    </script>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Yes/No Oracle</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            fontFamily: {
-              orbitron: ['Orbitron', 'sans-serif'],
-              fredoka: ['Fredoka', 'sans-serif'],
-              quicksand: ['Quicksand', 'sans-serif'],
-              mono: ['"Roboto Mono"', 'monospace'],
-              sans: ['ui-sans-serif', 'system-ui', 'sans-serif'],
-            },
-            animation: {
-              'spin-slow': 'spin 20s linear infinite',
-              'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-              'shimmer': 'shimmer 2s infinite',
-            },
-            keyframes: {
-              shimmer: {
-                '0%': { transform: 'translateX(-100%)' },
-                '100%': { transform: 'translateX(100%)' }
-              }
-            }
-          }
-        }
+  <script>
+    window.process = { env: { NODE_ENV: 'development' } };
+    window.global = window;
+
+    window.onerror = function (msg, url, line, col, error) {
+      console.error("Critical Oracle Boot Error:", msg, error);
+      const root = document.getElementById('root');
+      if (root) {
+        root.innerHTML = `<div style="background:#020617;color:#f87171;padding:40px;font-family:monospace;height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;"><h1>CRYSTAL BALL FRACTURED</h1><pre>${msg}</pre></div>`;
       }
-    </script>
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&family=Orbitron:wght@400;900&family=Quicksand:wght@400;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
-    
-    <style>
-      html, body { margin: 0; padding: 0; width: 100%; height: 100%; color: white; overflow-x: hidden; background: black; cursor: crosshair; }
-      #root { width: 100%; height: 100%; }
-      .perspective-1000 { perspective: 1000px; }
-      .boot-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; width: 100%; background: #020617; }
-      @keyframes spin { to { transform: rotate(360deg); } }
-      .spinner { width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.05); border-top-color: #06b6d4; border-radius: 50%; animation: spin 1s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
-      
-      /* Grain Effect for Noir */
-      .grain { position: fixed; inset: -100%; width: 300%; height: 300%; background-image: url("https://grainy-gradients.vercel.app/noise.svg"); opacity: 0.15; pointer-events: none; animation: grain 8s steps(10) infinite; z-index: 1; }
-      @keyframes grain { 0%, 100% { transform:translate(0, 0) } 10% { transform:translate(-5%, -10%) } 20% { transform:translate(-15%, 5%) } 30% { transform:translate(7%, -25%) } }
+    };
+  </script>
 
-      /* DTU Blueprint Grid */
-      .bg-blueprint {
-        background-color: #F6F7FA;
-        background-image: 
-          linear-gradient(#1E4D8C 1px, transparent 1px), 
-          linear-gradient(90deg, #1E4D8C 1px, transparent 1px);
-        background-size: 40px 40px;
-        background-position: center center;
-      }
-      /* Reduce opacity of the grid lines via mask or rgba in variable if needed, but here we rely on the line color being distinct */
-      .bg-blueprint::before {
-        content: "";
-        position: fixed;
-        inset: 0;
-        background: inherit;
-        opacity: 0.06; /* Subtle grid */
-        pointer-events: none;
-        z-index: -1;
-      }
-    </style>
 
-    <script type="importmap">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&family=Orbitron:wght@400;900&family=Quicksand:wght@400;700&family=Roboto+Mono:wght@400;700&display=swap"
+    rel="stylesheet">
+
+  <style>
+    /* Styles moved to index.css */
+  </style>
+
+  <script type="importmap">
 {
   "imports": {
     "react": "https://esm.sh/react@19.0.0",
@@ -101,13 +49,15 @@
 </script>
   <link rel="stylesheet" href="/index.css">
 </head>
-  <body>
-    <div id="root">
-      <div class="boot-screen">
-        <div class="spinner"></div>
-      </div>
+
+<body>
+  <div id="root">
+    <div class="boot-screen">
+      <div class="spinner"></div>
     </div>
-    <script type="module" src="./index.tsx"></script>
+  </div>
+  <script type="module" src="./index.tsx"></script>
   <script type="module" src="/index.tsx"></script>
 </body>
+
 </html>

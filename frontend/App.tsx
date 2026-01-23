@@ -25,11 +25,11 @@ const App: React.FC = () => {
   const { theme } = useTheme();
   const [settings, setSettings] = useState({
     // Hardcoded default base URL for the live app
-    baseUrl: 'https://api-image-664189756248.europe-west1.run.app', 
+    baseUrl: import.meta.env.VITE_API_BASE_URL || 'https://lucky-ai-api-664189756248.europe-west1.run.app',
     reduceMotion: false,
     soundEnabled: true,
   });
-  
+
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState("");
   const [isSpinning, setIsSpinning] = useState(false);
@@ -51,12 +51,11 @@ const App: React.FC = () => {
       if (savedSettings) {
         const parsed = JSON.parse(savedSettings);
         // Clean up old deprecated settings
-        const { mockMode, samplingMode, debug, voiceId, voiceDrama, ...cleanSettings } = parsed;
-        setSettings(prev => ({ ...prev, ...cleanSettings }));
+        setSettings(prev => ({ ...prev, ...parsed }));
       }
       const savedHistory = localStorage.getItem('oracle_history');
       if (savedHistory) setHistory(JSON.parse(savedHistory));
-    } catch (e) {}
+    } catch (e) { }
   }, []);
 
   useEffect(() => {
@@ -80,12 +79,12 @@ const App: React.FC = () => {
     setShowResult(false);
     setOracleResult(null);
     setCurrentQuestion(question);
-    
+
     soundEngine.playWhoosh();
 
     try {
       // Pass baseUrl to oracle client
-      const res = await askOracle(question, { 
+      const res = await askOracle(question, {
         baseUrl: settings.baseUrl,
       });
       setOracleResult(res);
@@ -111,16 +110,16 @@ const App: React.FC = () => {
 
   return (
     <div className={`flex-1 min-h-screen flex flex-col relative overflow-x-hidden ${theme.bg}`}>
-      
-      <SettingsDrawer 
-        isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} 
+
+      <SettingsDrawer
+        isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)}
         settings={settings} onUpdate={setSettings}
         onTestApi={() => setToastMsg("Resonance Verified.")}
       />
 
       <AnimatePresence>
         {flashTrigger && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: [0, 1, 0] }}
             exit={{ opacity: 0 }}
@@ -135,7 +134,7 @@ const App: React.FC = () => {
         <AnimatePresence mode="wait">
           {/* Hide ambient blobs for Blueprint theme to keep it clean */}
           {theme.ambientEffect !== 'grid' && (
-            <motion.div 
+            <motion.div
               key={theme.id}
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="absolute inset-0"
@@ -148,7 +147,7 @@ const App: React.FC = () => {
       </div>
 
       <header className="w-full max-w-7xl mx-auto px-10 pt-12 pb-16 flex justify-between items-start relative z-[100]">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, x: -50 }}
           animate={{ opacity: 1, x: 0 }}
           className="flex flex-col gap-2"
@@ -161,10 +160,10 @@ const App: React.FC = () => {
             <span className={`text-[10px] font-black uppercase tracking-[0.6em] opacity-40 ${theme.text} ${isDTU ? 'font-mono' : ''}`}>Inference Interface</span>
           </div>
         </motion.div>
-        
+
         <div className="flex gap-5">
           <ThemeSwitcher />
-          <button 
+          <button
             onClick={() => setIsSettingsOpen(true)}
             className={`p-6 rounded-[2rem] ${theme.cardBg} ${theme.text} border-2 ${theme.border} hover:scale-110 active:scale-95 transition-all shadow-2xl backdrop-blur-3xl cursor-pointer`}
           >
@@ -187,19 +186,19 @@ const App: React.FC = () => {
 
         <div className="lg:col-span-8 flex flex-col items-center relative min-h-[600px]">
           <div className="relative w-full flex justify-center items-center">
-            
+
             <div className={`relative transition-all duration-1000 w-full flex justify-center ${showResult ? 'scale-[0.85] opacity-5 blur-[60px] translate-y-[-50px] grayscale pointer-events-none' : 'scale-100 opacity-100'}`}>
-              <Wheel 
-                p_yes={oracleResult?.p_yes ?? 0.5} 
+              <Wheel
+                p_yes={oracleResult?.p_yes ?? 0.5}
                 spinning={isSpinning}
                 outcome={oracleResult?.answer ?? null}
                 onSpinComplete={handleSpinComplete}
                 reduceMotion={settings.reduceMotion}
               />
-              
+
               <AnimatePresence>
                 {loading && (
-                  <motion.div 
+                  <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.9 }}
@@ -207,7 +206,7 @@ const App: React.FC = () => {
                   >
                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.6)_100%)]" />
                     <Loader2 className={`animate-spin ${theme.text} mb-10`} size={120} strokeWidth={1} />
-                    <motion.div 
+                    <motion.div
                       key={loadingMsgIdx}
                       initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -30 }}
                       className={`text-[11px] font-black uppercase tracking-[0.5em] text-center px-16 leading-loose relative ${theme.text} ${isDTU ? 'font-mono' : ''}`}
@@ -223,8 +222,8 @@ const App: React.FC = () => {
               <AnimatePresence mode="wait">
                 {showResult && oracleResult && (
                   <div className="pointer-events-auto w-full">
-                    <ResultPanel 
-                      result={oracleResult} 
+                    <ResultPanel
+                      result={oracleResult}
                       question={currentQuestion}
                       onReset={() => { setShowResult(false); setOracleResult(null); setCurrentQuestion(""); }}
                       onCopy={() => setToastMsg("Fate synchronized.")}
@@ -238,8 +237,8 @@ const App: React.FC = () => {
           <div className="w-full mt-10">
             <AnimatePresence>
               {!showResult && !isSpinning && !loading && (
-                <motion.div 
-                  initial={{ opacity: 0, y: 20 }} 
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 0.2, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
                   className={`text-center py-20 px-10 border-2 border-dashed ${theme.border} ${theme.radius} ${theme.text} font-black uppercase tracking-[0.6em] text-[10px] w-full ${isDTU ? 'font-mono' : ''}`}
