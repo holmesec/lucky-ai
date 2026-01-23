@@ -170,4 +170,7 @@ jobs:
             --image "${IMAGE}" \
             --region "${REGION}" \
             --platform managed \
-            --allow-unauthenticated
+            --allow-unauthenticated \
+            --memory 4Gi \
+            --cpu 2 \
+            --timeout 300
