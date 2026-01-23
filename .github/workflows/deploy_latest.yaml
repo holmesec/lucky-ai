@@ -1,0 +1,63 @@
+name: Deploy Latest Model (Manual)
+
+on:
+  workflow_dispatch: # Allows manual trigger from GitHub Actions tab
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      PROJECT_ID: dtumlops-484507
+      REGION: europe-west1
+      AR_REPO: lucky-ai-repo
+      API_IMAGE: api-image
+      CLOUD_RUN_SERVICE: lucky-ai-api
+      WANDB_ENTITY: lucky_ai
+      WANDB_PROJECT: lucky-ai
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Auth to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCLOUD_SERVICE_KEY_MLOPS }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker auth
+        run: gcloud auth configure-docker ${REGION}-docker.pkg.dev --quiet
+
+      - name: Build + push API image
+        env:
+          WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
+        run: |
+          # We use "latest" as the tag for this manual test
+          IMAGE="${REGION}-docker.pkg.dev/${PROJECT_ID}/${AR_REPO}/${API_IMAGE}:latest"
+          
+          docker build \
+            -f dockerfiles/api.dockerfile \
+            --build-arg WANDB_ARTIFACT="lucky_ai/lucky-ai/lucky_bert:latest" \
+            --secret id=WANDB_API_KEY,env=WANDB_API_KEY \
+            --secret id=WANDB_ENTITY,env=WANDB_ENTITY \
+            --secret id=WANDB_PROJECT,env=WANDB_PROJECT \
+            -t "${IMAGE}" \
+            .
+
+          docker push "${IMAGE}"
+
+      - name: Deploy to Cloud Run
+        run: |
+          IMAGE="${REGION}-docker.pkg.dev/${PROJECT_ID}/${AR_REPO}/${API_IMAGE}:latest"
+
+          gcloud run deploy "${CLOUD_RUN_SERVICE}" \
+            --image "${IMAGE}" \
+            --region "${REGION}" \
+            --platform managed \
+            --cpu 2 \
+            --memory 4Gi \
+            --concurrency 1 \
+            --timeout 600 \
+            --cpu-boost \
+            --allow-unauthenticated
