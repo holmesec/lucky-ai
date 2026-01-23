@@ -2,12 +2,11 @@
 export default {
     content: [
         "./index.html",
-        "./src/**/*.{js,ts,jsx,tsx}",
-        "./components/**/*.{js,ts,jsx,tsx}", // Just in case components are outside src, though file structure showed them in src/components or root/components? 
-        // Wait, list_dir showed components in root/components.
+        "./*.{js,ts,jsx,tsx}",
         "./components/**/*.{js,ts,jsx,tsx}",
         "./themes/**/*.{js,ts,jsx,tsx}",
-        "./*.{js,ts,jsx,tsx}", // For App.tsx if it's in root
+        "./api/**/*.{js,ts,jsx,tsx}",
+        "./utils/**/*.{js,ts,jsx,tsx}",
     ],
     theme: {
         extend: {
