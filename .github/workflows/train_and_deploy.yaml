@@ -195,3 +195,4 @@ jobs:
             --timeout 600 \
             --cpu-boost \
             --allow-unauthenticated
+            --set-secrets DATABASE_URL=DATABASE_URL:latest

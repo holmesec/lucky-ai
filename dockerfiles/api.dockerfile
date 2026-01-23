@@ -20,6 +20,7 @@ COPY src/lucky_ai/__init__.py ./lucky_ai/
 COPY src/lucky_ai/api.py ./lucky_ai/
 COPY src/lucky_ai/model.py ./lucky_ai/
 COPY src/lucky_ai/download_model.py ./lucky_ai/
+COPY src/lucky_ai/database.py ./lucky_ai/
 
 ENV PATH="/app/.venv/bin:$PATH"
 
