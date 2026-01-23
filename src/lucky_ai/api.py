@@ -1,7 +1,6 @@
 from contextlib import asynccontextmanager
 
 import torch
-from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 from torch.nn import Softmax
@@ -9,8 +8,7 @@ from transformers import BertTokenizerFast
 from fastapi.middleware.cors import CORSMiddleware
 
 from lucky_ai.model import LuckyBertModel
-
-load_dotenv()
+from lucky_ai.database import insert_user_data
 
 
 @asynccontextmanager
@@ -44,6 +42,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 @app.get("/", include_in_schema=False)
 async def docs_redirect():
     return RedirectResponse(url="/docs")
@@ -54,4 +53,12 @@ def read_item(question: str):
     input_ids, attention_mask = tokenize(question)
     out = model(input_ids=input_ids, attention_mask=attention_mask)
     probs = softmax(out).detach().numpy()[0]
-    return {"probs": {"yes": float(probs[1]), "no": float(probs[0])}}
+    return {"probs": {"yes": float(probs[0]), "no": float(probs[1])}}
+
+
+@app.post("/submit_feedback/")
+def submit_feedback(prompt: str, label: str):
+    if label not in ["yes", "no"]:
+        return {"status": "error", "message": "Invalid label. Must be 'yes' or 'no'."}
+    insert_user_data(prompt, label)
+    return {"status": "success"}
