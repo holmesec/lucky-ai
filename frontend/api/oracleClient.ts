@@ -26,13 +26,13 @@ export async function askOracle(
 
   const response = await fetch(url.toString(), {
     method: "POST",
-    headers: { 
+    headers: {
       "Accept": "application/json",
-      "Content-Type": "application/json" 
+      "Content-Type": "application/json"
     },
     // 3. Send an empty JSON object as the body. 
     // This solves the '411 Length Required' error from Google Cloud.
-    body: JSON.stringify({}), 
+    body: JSON.stringify({}),
   });
 
   if (!response.ok) {
@@ -45,7 +45,7 @@ export async function askOracle(
   // 4. Map the backend's "probs" structure
   const p_yes = data.probs.yes;
   const p_no = data.probs.no;
-  const answer = p_yes > p_no ? "yes" : "no";
+  const answer = Math.random() < p_yes ? "yes" : "no";
 
   return {
     p_yes: p_yes,
