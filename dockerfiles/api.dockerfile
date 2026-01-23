@@ -33,6 +33,7 @@ RUN --mount=type=secret,id=WANDB_API_KEY,env=WANDB_API_KEY \
     python ./lucky_ai/download_model.py
 
 
-RUN mkdir -p /app/model
+EXPOSE 8080
 
+# Use the shell form to ensure $PORT is handled correctly by Cloud Run
 CMD uvicorn lucky_ai.api:app --host 0.0.0.0 --port $PORT
