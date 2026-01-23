@@ -8,11 +8,11 @@ load_dotenv()
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 
-def get_conn():
+def get_conn() -> psycopg2.extensions.connection:
     return psycopg2.connect(DATABASE_URL, sslmode="require")
 
 
-def insert_user_data(prompt, label):
+def insert_user_data(prompt: str, label: str) -> None:
     conn = get_conn()
     try:
         with conn.cursor() as cur:
@@ -29,7 +29,7 @@ def insert_user_data(prompt, label):
         conn.close()
 
 
-def fetch_user_data():
+def fetch_user_data() -> pd.DataFrame:
     """Fetch all user data from the database and return as a pandas DataFrame."""
     conn = get_conn()
 
