@@ -35,7 +35,7 @@ jobs:
         run: |
           # We use "latest" as the tag for this manual test
           IMAGE="${REGION}-docker.pkg.dev/${PROJECT_ID}/${AR_REPO}/${API_IMAGE}:latest"
-          
+
           docker build \
             -f dockerfiles/api.dockerfile \
             --build-arg WANDB_ARTIFACT="lucky_ai/lucky-ai/lucky_bert:latest" \
@@ -60,4 +60,5 @@ jobs:
             --concurrency 1 \
             --timeout 600 \
             --cpu-boost \
-            --allow-unauthenticated
+            --allow-unauthenticated \
+            --set-secrets DATABASE_URL=DATABASE_URL:latest
